@@ -1,12 +1,12 @@
 type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  feature: any
-  coordinate: number[]
-  onClose: () => void
-}
+  feature: any;
+  coordinate: number[];
+  onClose: () => void;
+};
 
-export default function FeaturePopup({ feature, coordinate, onClose }: Props) {
-  const props = feature.getProperties()
+export default function FeaturePopup({ feature, onClose }: Props) {
+  const props = feature.getProperties();
 
   return (
     <div
@@ -36,9 +36,7 @@ export default function FeaturePopup({ feature, coordinate, onClose }: Props) {
         ✕
       </button>
 
-      <h3 style={{ margin: 0, fontWeight: 600 }}>
-        {props.name ?? 'Entité'}
-      </h3>
+      <h3 style={{ margin: 0, fontWeight: 600 }}>{props.name ?? 'Entité'}</h3>
 
       <hr />
 
@@ -52,5 +50,5 @@ export default function FeaturePopup({ feature, coordinate, onClose }: Props) {
         {JSON.stringify(props, null, 2)}
       </pre>
     </div>
-  )
+  );
 }

@@ -18,14 +18,17 @@ import Overlay from 'ol/Overlay';
 import { Fill, Stroke, Style } from 'ol/style';
 import Select from 'ol/interaction/Select';
 import { click } from 'ol/events/condition';
-import { fetchData } from './api';
+import { fetchData, fetchOne } from './api';
 import FeaturePopup from './popup';
+import { Extent } from 'ol/extent';
 
 export default function OpenLayersMap() {
-  const popupRef = useRef<HTMLDivElement | null>(null);
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<Map | null>(null); // add
+  const overlayRef = useRef<Overlay | null>(null); // add
+  const initialExtentRef = useRef<Extent | null>(null); // add
 
   useEffect(() => {
     let map: Map;
@@ -47,12 +50,15 @@ export default function OpenLayersMap() {
         }),
       });
 
+      mapRef.current = map;
+
       overlay = new Overlay({
         element: popupRef.current!,
         positioning: 'bottom-center',
         stopEvent: true,
         offset: [0, -12],
       });
+      overlayRef.current = overlay;
 
       map.addOverlay(overlay);
 
@@ -82,6 +88,7 @@ export default function OpenLayersMap() {
 
       const extent = vectorSource.getExtent();
       if (extent.every((c) => !isNaN(c))) {
+        initialExtentRef.current = extent;
         map.getView().fit(extent, {
           padding: [60, 60, 60, 60],
           duration: 800,
@@ -104,7 +111,7 @@ export default function OpenLayersMap() {
 
       map.addInteraction(clickSelect);
 
-      clickSelect.on('select', (e) => {
+      clickSelect.on('select', async (e) => {
         const feature = e.selected[0];
 
         if (!feature) {
@@ -113,24 +120,46 @@ export default function OpenLayersMap() {
           return;
         }
 
-        setSelectedFeature(feature);
+        const id = feature.get('id'); // ou ap_id selon ce que tu as mis
 
-        const geometry = feature.getGeometry();
-        if (!geometry) return;
+        try {
+          // Récupérer les détails complets + géométrie complète depuis le backend
+          const fullFeature = await fetchOne(id); // à implémenter dans api.ts pour récupérer une feature complète par ID
 
-        const extent = geometry.getExtent();
-        const coordinate = [
-          (extent[0] + extent[2]) / 2,
-          (extent[1] + extent[3]) / 2,
-        ];
+          // Remplacer la géométrie simplifiée par la complète
+          feature.setGeometry(
+            new GeoJSON().readGeometry(fullFeature.geometry, {
+              dataProjection: 'EPSG:4326',
+              featureProjection: 'EPSG:3857',
+            }),
+          );
 
-        overlay.setPosition(coordinate);
+          // Mettre les propriétés complètes
+          feature.setProperties(fullFeature.properties);
 
-        map.getView().fit(geometry.getExtent(), {
-          padding: [80, 80, 80, 80],
-          duration: 500,
-          maxZoom: 18,
-        });
+          setSelectedFeature(feature);
+
+          // Calculer la position du popup (centre de la géométrie complète)
+          const geometry = feature.getGeometry();
+          if (!geometry) return;
+
+          const extent = geometry.getExtent();
+          const coordinate = [
+            (extent[0] + extent[2]) / 2,
+            (extent[1] + extent[3]) / 2,
+          ];
+
+          overlay.setPosition(coordinate);
+
+          // Ajuster le zoom sur la géométrie complète
+          map.getView().fit(geometry.getExtent(), {
+            padding: [80, 80, 80, 80],
+            duration: 500,
+            maxZoom: 18,
+          });
+        } catch (err) {
+          console.error('Erreur récupération détails feature :', err);
+        }
       });
 
       map.on('pointermove', (evt) => {
@@ -147,6 +176,23 @@ export default function OpenLayersMap() {
     };
   }, []);
 
+  const onClosePopup = () => {
+    setSelectedFeature(null);
+    overlayRef.current?.setPosition(undefined);
+
+    const map = mapRef.current;
+    const extent = initialExtentRef.current;
+
+    console.log(map, extent);
+    if (map && extent) {
+      map.getView().fit(extent, {
+        padding: [60, 60, 60, 60],
+        duration: 500,
+        maxZoom: 12,
+      });
+    }
+  };
+
   return (
     <div style={{ position: 'relative' }}>
       <div id="map" style={{ height: '100vh', width: '100%' }} />
@@ -156,7 +202,7 @@ export default function OpenLayersMap() {
           <FeaturePopup
             feature={selectedFeature}
             coordinate={selectedFeature.getGeometry()}
-            onClose={() => setSelectedFeature(null)}
+            onClose={onClosePopup}
           />
         )}
       </div>
