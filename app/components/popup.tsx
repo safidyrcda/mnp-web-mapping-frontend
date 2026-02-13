@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
+import { fetchFundings } from '../api/fundings/get-fundings-by-ap.api';
+
 type Props = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   feature: any;
   coordinate: number[];
   onClose: () => void;
@@ -7,6 +9,20 @@ type Props = {
 
 export default function FeaturePopup({ feature, onClose }: Props) {
   const props = feature.getProperties();
+  const [fundings, setFundings] = useState<any[]>([]);
+
+  const fetchDetails = async () => {
+    const id = props.id;
+
+    const res = await fetchFundings(id);
+
+    setFundings(res);
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchDetails();
+  }, [props.id]);
 
   return (
     <div
@@ -36,7 +52,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
         ✕
       </button>
 
-      <h3 style={{ margin: 0, fontWeight: 600 }}>{props.name ?? 'Entité'}</h3>
+      <h3 style={{ margin: 0, fontWeight: 600 }}>{props.sigle ?? 'Entité'}</h3>
 
       <hr />
 
@@ -47,7 +63,10 @@ export default function FeaturePopup({ feature, onClose }: Props) {
           overflow: 'auto',
         }}
       >
-        {JSON.stringify(props, null, 2)}
+        {props.id}
+        {fundings.map((e) => {
+          return <div key={e.id}>{e.funder.name}</div>;
+        })}
       </pre>
     </div>
   );
