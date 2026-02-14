@@ -1,8 +1,10 @@
 'use server';
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:4000';
 export const fetchFundings = async (protectedAreaId: string) => {
   const response = await fetch(
-    `http://localhost:4000/fundings/protected-area/${protectedAreaId}`,
+    `${BACKEND_URL}/fundings/protected-area/${protectedAreaId}`
   );
 
   return response.json();

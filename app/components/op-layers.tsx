@@ -21,9 +21,10 @@ import { click } from 'ol/events/condition';
 import { fetchData, fetchOne } from './api';
 import FeaturePopup from './popup';
 import { Extent } from 'ol/extent';
+import TileArcGISRest from 'ol/source/TileArcGISRest';
+import { OSM } from 'ol/source';
 
 export default function OpenLayersMap() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null); // add
@@ -39,8 +40,8 @@ export default function OpenLayersMap() {
         target: 'map',
         layers: [
           new TileLayer({
-            source: new XYZ({
-              url: 'https://{a-c}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+            source: new TileArcGISRest({
+              url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
             }),
           }),
         ],
@@ -131,7 +132,7 @@ export default function OpenLayersMap() {
             new GeoJSON().readGeometry(fullFeature.geometry, {
               dataProjection: 'EPSG:4326',
               featureProjection: 'EPSG:3857',
-            }),
+            })
           );
 
           // Mettre les propriétés complètes
@@ -195,7 +196,7 @@ export default function OpenLayersMap() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <div id="map" style={{ height: '100vh', width: '100%' }} />
+      <div id="map" style={{ height: '750px', width: '100%' }} />
 
       <div ref={popupRef}>
         {selectedFeature && (
