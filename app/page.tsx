@@ -1,6 +1,6 @@
-import Header from './components/header';
-import HeroSection from './components/hero-section';
-import OpenLayersMap from './components/op-layers';
+import Header from '../components/header';
+import HeroSection from '../components/hero-section';
+import OpenLayersMap from '../components/op-layers';
 
 export default function Page() {
   return (
@@ -33,7 +33,7 @@ export default function Page() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full bg-gray-900 text-white py-8 md:py-12">
+      {/* <footer className="w-full bg-gray-900 text-white py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
@@ -72,7 +72,7 @@ export default function Page() {
             </p>
           </div>
         </div>
-      </footer>
+      </footer> */}
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchFundings } from '../api/fundings/get-fundings-by-ap.api';
+import { fetchFundings } from '../app/api/fundings/get-fundings-by-ap.api';
 
 type Props = {
   feature: any;
