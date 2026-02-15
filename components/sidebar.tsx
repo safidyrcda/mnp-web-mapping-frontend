@@ -12,7 +12,7 @@ export function AdminSidebar() {
     {
       href: '/admin/funders',
       icon: Users,
-      label: 'Financeurs',
+      label: 'Bailleurs',
     },
     {
       href: '/admin/projects',
@@ -29,7 +29,9 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border h-screen sticky top-0 flex flex-col">
       <div className="p-6 border-b border-sidebar-border">
-        <h1 className="text-2xl font-bold text-sidebar-primary">Admin MNP</h1>
+        <h1 className="text-2xl font-bold text-sidebar-primary">
+          Madagascar National Parks
+        </h1>
         <p className="text-xs text-sidebar-foreground/60 mt-1">
           Gestion des données
         </p>
@@ -57,12 +59,6 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-
-      <div className="p-4 border-t border-sidebar-border">
-        <p className="text-xs text-sidebar-foreground/50">
-          Ministère de la Nature et des Parcs
-        </p>
-      </div>
     </aside>
   );
 }

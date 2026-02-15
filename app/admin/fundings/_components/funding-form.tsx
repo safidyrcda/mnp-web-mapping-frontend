@@ -33,7 +33,6 @@ export function FundingForm({
   const form = useForm<Funding>({
     resolver: zodResolver(fundingSchema),
     defaultValues: {
-      name: initialData?.name ?? '',
       funderId: initialData?.funderId ?? '',
       projectId: initialData?.projectId ?? undefined,
     },
@@ -56,12 +55,6 @@ export function FundingForm({
       loading={loading}
       submitButtonText={initialData ? 'Mettre à jour' : 'Créer'}
     >
-      <FormInput
-        control={form.control}
-        name="name"
-        label="Nom du financement"
-        placeholder="ex. Financement GEF REDD+"
-      />
       <FormSelect
         control={form.control}
         name="funderId"

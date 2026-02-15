@@ -42,7 +42,7 @@ export function FundingTable({
         <thead>
           <tr className="border-b border-border bg-muted/50">
             <th className="px-6 py-3 text-left text-sm font-semibold">
-              Financeur
+              Bailleur
             </th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
               Aire protégée

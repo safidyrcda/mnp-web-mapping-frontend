@@ -25,7 +25,7 @@ export default function Header() {
               Plateforme de Conservation
             </p>
             <p className="text-lg text-gray-700 font-light">
-              Explorer les Zones Protégées et les Partenaires de Financement
+              Explorer les Aires Protégées et les Partenaires de Financement
             </p>
           </div>
         </div>
