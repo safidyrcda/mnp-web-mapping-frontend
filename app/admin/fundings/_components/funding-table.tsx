@@ -3,9 +3,10 @@
 import { Funding, Funder, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import { GetFundingsDTO } from '@/app/api/manage-data';
 
 interface FundingTableProps {
-  fundings: Funding[];
+  fundings: GetFundingsDTO;
   funders: Funder[];
   projects: Project[];
   protectedAreas: ProtectedArea[];
@@ -40,7 +41,6 @@ export function FundingTable({
       <table className="w-full">
         <thead>
           <tr className="border-b border-border bg-muted/50">
-            <th className="px-6 py-3 text-left text-sm font-semibold">Nom</th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
               Financeur
             </th>
@@ -61,22 +61,28 @@ export function FundingTable({
               key={funding.id}
               className="border-b border-border hover:bg-muted/30 transition-colors"
             >
-              <td className="px-6 py-3 text-sm font-medium">{funding.name}</td>
               <td className="px-6 py-3 text-sm text-muted-foreground">
-                {getFunderName(funding.funderId)}
+                {getFunderName(funding.funder?.id)}
               </td>
               <td className="px-6 py-3 text-sm text-muted-foreground">
-                {getProtectedAreaName(funding.protectedAreaId?.toString())}
+                {getProtectedAreaName(funding.protectedArea.id?.toString())}
               </td>
               <td className="px-6 py-3 text-sm text-muted-foreground">
-                {getProjectName(funding.projectId)}
+                {getProjectName(funding.project?.id)}
               </td>
               <td className="px-6 py-3">
                 <div className="flex justify-end gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onEdit(funding)}
+                    onClick={() =>
+                      onEdit({
+                        id: funding.id,
+                        name: funding.name,
+                        funderId: funding.funder.id,
+                        projectId: funding.project?.id,
+                      })
+                    }
                     className="w-9 h-9 p-0"
                   >
                     <Pencil className="w-4 h-4" />
@@ -84,7 +90,14 @@ export function FundingTable({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onDelete(funding)}
+                    onClick={() =>
+                      onDelete({
+                        id: funding.id,
+                        name: funding.name,
+                        funderId: funding.funder.id,
+                        projectId: funding.project?.id,
+                      })
+                    }
                     className="w-9 h-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />

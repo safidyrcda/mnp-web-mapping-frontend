@@ -10,7 +10,8 @@ import {
   getFunders,
   getProjects,
   getProtectedAreas,
-} from '@/lib/mock-data';
+  GetFundingsDTO,
+} from '@/app/api/manage-data';
 import { FundingForm } from './funding-form';
 import { FundingTable } from './funding-table';
 import { BaseModal } from '@/components/modals/base-modal';
@@ -20,11 +21,12 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function FundingPage() {
-  const [fundings, setFundings] = useState<Funding[]>([]);
+  const [fundings, setFundings] = useState<GetFundingsDTO>([]);
   const [funders, setFunders] = useState<Funder[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [protectedAreas, setProtectedAreas] = useState<ProtectedArea[]>([]);
-  const [selectedProtectedAreaFilter, setSelectedProtectedAreaFilter] = useState<string>('');
+  const [selectedProtectedAreaFilter, setSelectedProtectedAreaFilter] =
+    useState<string>('');
   const [selectedFunding, setSelectedFunding] = useState<Funding | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -38,12 +40,13 @@ export function FundingPage() {
   const loadData = async () => {
     try {
       setIsInitialLoading(true);
-      const [fundingsData, fundersData, projectsData, protectedAreasData] = await Promise.all([
-        getFundings(),
-        getFunders(),
-        getProjects(),
-        getProtectedAreas(),
-      ]);
+      const [fundingsData, fundersData, projectsData, protectedAreasData] =
+        await Promise.all([
+          getFundings(),
+          getFunders(),
+          getProjects(),
+          getProtectedAreas(),
+        ]);
       setFundings(fundingsData);
       setFunders(fundersData);
       setProjects(projectsData);
@@ -60,7 +63,7 @@ export function FundingPage() {
   };
 
   const filteredFundings = selectedProtectedAreaFilter
-    ? fundings.filter((f) => f.protectedAreaId === selectedProtectedAreaFilter)
+    ? fundings.filter((f) => f.protectedArea.id === selectedProtectedAreaFilter)
     : fundings;
 
   const handleCreateClick = () => {
@@ -78,7 +81,7 @@ export function FundingPage() {
     setIsDeleteOpen(true);
   };
 
-  const handleFormSubmit = async (data: Funding) => {
+  const handleFormSubmit = async (data: Partial<Funding>) => {
     try {
       setIsLoading(true);
       if (selectedFunding?.id) {
@@ -158,7 +161,9 @@ export function FundingPage() {
       <BaseModal
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
-        title={selectedFunding ? 'Modifier le financement' : 'Nouveau financement'}
+        title={
+          selectedFunding ? 'Modifier le financement' : 'Nouveau financement'
+        }
       >
         <FundingForm
           initialData={selectedFunding || undefined}
@@ -167,6 +172,7 @@ export function FundingPage() {
           protectedAreas={protectedAreas}
           onSubmit={handleFormSubmit}
           loading={isLoading}
+          selectedProtectedArea={selectedProtectedAreaFilter}
         />
       </BaseModal>
 

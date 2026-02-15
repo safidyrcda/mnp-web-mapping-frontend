@@ -17,17 +17,18 @@ interface FundingFormProps {
   funders: Funder[];
   projects: Project[];
   protectedAreas: ProtectedArea[];
-  onSubmit: (data: Funding) => Promise<void>;
+  onSubmit: (data: Partial<Funding>) => Promise<void>;
   loading?: boolean;
+  selectedProtectedArea: ProtectedArea['id'];
 }
 
 export function FundingForm({
   initialData,
   funders,
   projects,
-  protectedAreas,
   onSubmit,
   loading = false,
+  selectedProtectedArea,
 }: FundingFormProps) {
   const form = useForm<Funding>({
     resolver: zodResolver(fundingSchema),
@@ -39,9 +40,12 @@ export function FundingForm({
   });
 
   const handleSubmit = async (data: Funding) => {
+    if (data.projectId === 'empty') data.projectId = null;
+
     await onSubmit({
       ...data,
       id: initialData?.id,
+      protectedAreaId: selectedProtectedArea,
     });
   };
 
@@ -75,7 +79,7 @@ export function FundingForm({
         label="Projet (optionnel)"
         placeholder="Sélectionner un projet ou laisser vide"
         options={[
-          { value: 'test', label: 'Aucun projet' },
+          { value: 'empty', label: 'Aucun projet' },
           ...projects.map((p) => ({
             value: p.id!,
             label: p.name,

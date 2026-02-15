@@ -7,7 +7,7 @@ import {
   createProject,
   updateProject,
   deleteProject,
-} from '@/lib/mock-data';
+} from '@/app/api/manage-data';
 import { ProjectForm } from './project-form';
 import { ProjectsTable } from './projects-table';
 import { BaseModal } from '@/components/modals/base-modal';

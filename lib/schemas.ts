@@ -29,11 +29,12 @@ export const fundingSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1, 'Le nom du financement est requis').max(100),
   funderId: z.string().uuid('Un financeur doit être sélectionné'),
-  projectId: z.string().uuid().optional().nullable(),
+  projectId: z.string().optional().nullable(),
   protectedAreaId: z
     .string()
     .uuid('Une aire protégée doit être sélectionnée')
-    .nullable(),
+    .nullable()
+    .optional(),
 });
 
 export type Funding = z.infer<typeof fundingSchema>;
