@@ -1,0 +1,31 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted   # ← utiliser ton runner self-hosted
+    steps:
+      # 1️⃣ Récupérer le code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2️⃣ Installer pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      # 3️⃣ Build et déploiement
+      - name: Build & Deploy Backend
+        run: |
+          cd /home/safidy/mnp-webmapping/frontend
+          git fetch
+          git reset --hard origin/main
+          pnpm install
+          pnpm run build
+          pm2 reload webmapping-frontend
+          echo "Frontend déployé avec succès ! 🚀"
+
