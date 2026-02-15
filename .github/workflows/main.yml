@@ -12,14 +12,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Installer pnpm
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
 
       # 3️⃣ Build et déploiement
-      - name: Build & Deploy Backend
+      - name: Build & Deploy Frontend
         run: |
           cd /home/safidy/mnp-webmapping/frontend
           git fetch
