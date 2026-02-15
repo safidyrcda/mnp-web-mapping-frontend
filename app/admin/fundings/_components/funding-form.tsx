@@ -35,7 +35,6 @@ export function FundingForm({
       name: initialData?.name ?? '',
       funderId: initialData?.funderId ?? '',
       projectId: initialData?.projectId ?? undefined,
-      protectedAreaId: initialData?.protectedAreaId ?? '',
     },
   });
 

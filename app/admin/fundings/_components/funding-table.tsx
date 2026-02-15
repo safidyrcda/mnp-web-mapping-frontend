@@ -30,7 +30,7 @@ export function FundingTable({
     return projects.find((p) => p.id === id)?.name || 'N/A';
   };
 
-  const getProtectedAreaName = (id: string) => {
+  const getProtectedAreaName = (id?: string) => {
     const pa = protectedAreas.find((p) => p.id === id);
     return pa ? `${pa.sigle} - ${pa.name}` : 'N/A';
   };
@@ -41,21 +41,32 @@ export function FundingTable({
         <thead>
           <tr className="border-b border-border bg-muted/50">
             <th className="px-6 py-3 text-left text-sm font-semibold">Nom</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">Financeur</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">Aire protégée</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">Projet</th>
-            <th className="px-6 py-3 text-right text-sm font-semibold">Actions</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">
+              Financeur
+            </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">
+              Aire protégée
+            </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">
+              Projet
+            </th>
+            <th className="px-6 py-3 text-right text-sm font-semibold">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
           {fundings.map((funding) => (
-            <tr key={funding.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+            <tr
+              key={funding.id}
+              className="border-b border-border hover:bg-muted/30 transition-colors"
+            >
               <td className="px-6 py-3 text-sm font-medium">{funding.name}</td>
               <td className="px-6 py-3 text-sm text-muted-foreground">
                 {getFunderName(funding.funderId)}
               </td>
               <td className="px-6 py-3 text-sm text-muted-foreground">
-                {getProtectedAreaName(funding.protectedAreaId)}
+                {getProtectedAreaName(funding.protectedAreaId?.toString())}
               </td>
               <td className="px-6 py-3 text-sm text-muted-foreground">
                 {getProjectName(funding.projectId)}
