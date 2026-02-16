@@ -1,8 +1,8 @@
 import { FundersPage } from './_components/funders-page';
 
 export const metadata = {
-  title: 'Financeurs - Admin',
-  description: 'Gestion des financeurs',
+  title: 'Bailleurs - Admin',
+  description: 'Gestion des bailleurs',
 };
 
 export default function FundersPageRoute() {

@@ -31,6 +31,34 @@ export default function OpenLayersMap() {
   const overlayRef = useRef<Overlay | null>(null); // add
   const initialExtentRef = useRef<Extent | null>(null); // add
 
+  const typeColors: Record<string, string> = {
+    PN: '#2ecc71',
+    RS: '#3498db',
+    RNI: '#f1c40f',
+  };
+  const styleCacheRef = useRef<Record<string, Style>>({});
+
+  const getStyleByType = (feature: any) => {
+    const type = feature.get('status');
+    const color = typeColors[type] || '#95a5a6';
+
+    const cache = styleCacheRef.current;
+
+    if (!cache[type]) {
+      cache[type] = new Style({
+        fill: new Fill({
+          color: color + '67',
+        }),
+        stroke: new Stroke({
+          color: color,
+          width: 2,
+        }),
+      });
+    }
+
+    return cache[type];
+  };
+
   useEffect(() => {
     let map: Map;
     let overlay: Overlay;
@@ -74,15 +102,7 @@ export default function OpenLayersMap() {
 
       const vectorLayer = new VectorLayer({
         source: vectorSource,
-        style: new Style({
-          fill: new Fill({
-            color: 'rgba(0, 123, 255, 0.3)',
-          }),
-          stroke: new Stroke({
-            color: '#2563eb',
-            width: 2,
-          }),
-        }),
+        style: getStyleByType,
       });
 
       map.addLayer(vectorLayer);
@@ -99,15 +119,7 @@ export default function OpenLayersMap() {
       const clickSelect = new Select({
         condition: click,
         layers: [vectorLayer],
-        style: new Style({
-          fill: new Fill({
-            color: 'rgba(239, 68, 68, 0.35)',
-          }),
-          stroke: new Stroke({
-            color: '#ef4444',
-            width: 3,
-          }),
-        }),
+        style: getStyleByType,
       });
 
       map.addInteraction(clickSelect);
@@ -132,7 +144,7 @@ export default function OpenLayersMap() {
             new GeoJSON().readGeometry(fullFeature.geometry, {
               dataProjection: 'EPSG:4326',
               featureProjection: 'EPSG:3857',
-            })
+            }),
           );
 
           // Mettre les propriétés complètes

@@ -35,12 +35,14 @@ export function FundingForm({
     defaultValues: {
       funderId: initialData?.funderId ?? '',
       projectId: initialData?.projectId ?? undefined,
+      name: initialData?.name ?? '',
     },
   });
 
   const handleSubmit = async (data: Funding) => {
     if (data.projectId === 'empty') data.projectId = null;
 
+    console.log(data);
     await onSubmit({
       ...data,
       id: initialData?.id,
@@ -55,6 +57,12 @@ export function FundingForm({
       loading={loading}
       submitButtonText={initialData ? 'Mettre à jour' : 'Créer'}
     >
+      <FormInput
+        control={form.control}
+        name="name"
+        label="Nom du financement"
+        placeholder="ex. Financement GEF REDD+"
+      />
       <FormSelect
         control={form.control}
         name="funderId"
@@ -66,7 +74,7 @@ export function FundingForm({
         }))}
       />
 
-      <FormSelect
+      {/* <FormSelect
         control={form.control}
         name="projectId"
         label="Projet (optionnel)"
@@ -78,7 +86,7 @@ export function FundingForm({
             label: p.name,
           })),
         ]}
-      />
+      /> */}
     </FormWrapper>
   );
 }

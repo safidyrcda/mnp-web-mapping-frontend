@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchFundings } from '../app/api/fundings/get-fundings-by-ap.api';
+import { ProtectedArea } from '@/lib/schemas';
 
 type Props = {
   feature: any;
@@ -8,36 +9,50 @@ type Props = {
 };
 
 export default function FeaturePopup({ feature, onClose }: Props) {
-  const props = feature.getProperties();
+  const props: ProtectedArea = feature.getProperties();
   const [fundings, setFundings] = useState<any[]>([]);
 
   const fetchDetails = async () => {
     const id = props.id;
 
+    if (!id) return;
     const res = await fetchFundings(id);
 
     setFundings(res);
   };
 
+  const getStatusName = (status: string) => {
+    switch (status) {
+      case 'PN':
+        return 'Parc national';
+
+      case 'RS':
+        return 'Réserve spéciale';
+
+      default:
+        return 'Réserve naturelle intégrale';
+    }
+  };
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDetails();
   }, [props.id]);
+
+  console.log(props);
 
   return (
     <div
       style={{
         position: 'absolute',
-        transform: 'translate(-50%, -100%)',
+        transform: 'translate(-10%, 0%)',
         background: 'white',
         borderRadius: '12px',
-        minWidth: '320px',
-        maxWidth: '380px',
+        minWidth: '280px',
+        maxWidth: '280px',
         boxShadow:
           '0 20px 50px rgba(211, 136, 0, 0.25), 0 0 1px rgba(0,0,0,0.1)',
         pointerEvents: 'auto',
         border: '1px solid rgba(211, 136, 0, 0.1)',
-        overflow: 'hidden',
       }}
     >
       {/* Header with gradient */}
@@ -77,99 +92,47 @@ export default function FeaturePopup({ feature, onClose }: Props) {
         >
           ✕
         </button>
-        <h3 style={{ margin: 0, fontWeight: 700, fontSize: '18px' }}>
-          {props.sigle ?? 'Protected Area'}
-        </h3>
-        <p style={{ margin: '4px 0 0 0', fontSize: '13px', opacity: 0.95 }}>
+        <h3 style={{ margin: 0, fontWeight: 700, fontSize: '14px' }}>
           {props.name}
-        </p>
+        </h3>
       </div>
 
       {/* Content */}
-      <div style={{ padding: '16px' }}>
-        {/* Area Details */}
-        {props.size && (
-          <div style={{ marginBottom: '12px' }}>
-            <p
-              style={{
-                margin: '0 0 6px 0',
-                fontSize: '12px',
-                color: '#888',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Area Size
-            </p>
-            <p
-              style={{
-                margin: 0,
-                fontSize: '16px',
-                fontWeight: 600,
-                color: '#d38800',
-              }}
-            >
-              {(props.size / 1000).toFixed(1)} km²
-            </p>
+      <div style={{ padding: '16px', maxHeight: '300px', overflowY: 'scroll' }}>
+        <div
+          style={{
+            borderTop: '1px solid #f0e6d2',
+            paddingTop: '12px',
+            marginBottom: 4,
+          }}
+        >
+          <p
+            style={{
+              margin: '0 0 10px 0',
+              fontSize: '12px',
+              color: '#888',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            Détails
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {props.status && (
+              <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>
+                <span style={{ fontWeight: 600 }}>Statut:</span>{' '}
+                {getStatusName(props.status)}
+              </p>
+            )}
+            {props.size && (
+              <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>
+                <span style={{ fontWeight: 600 }}>Surface:</span>{' '}
+                {props.size.toFixed(3)}ha
+              </p>
+            )}
           </div>
-        )}
-
-        {/* Description */}
-        {props.description && (
-          <div style={{ marginBottom: '14px' }}>
-            <p
-              style={{
-                margin: '0 0 6px 0',
-                fontSize: '12px',
-                color: '#888',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Description
-            </p>
-            <p
-              style={{
-                margin: 0,
-                fontSize: '13px',
-                color: '#555',
-                lineHeight: '1.5',
-              }}
-            >
-              {props.description}
-            </p>
-          </div>
-        )}
-
-        {/* Biodiversity */}
-        {props.biodiversity && (
-          <div style={{ marginBottom: '14px' }}>
-            <p
-              style={{
-                margin: '0 0 6px 0',
-                fontSize: '12px',
-                color: '#888',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Biodiversity Status
-            </p>
-            <p
-              style={{
-                margin: 0,
-                fontSize: '13px',
-                color: '#d38800',
-                fontWeight: 600,
-              }}
-            >
-              {props.biodiversity}
-            </p>
-          </div>
-        )}
+        </div>
 
         {/* Funding Partners */}
         {fundings.length > 0 && (
@@ -184,7 +147,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
                 letterSpacing: '0.5px',
               }}
             >
-              Funding Partners ({fundings.length})
+              Bailleurs({fundings.length})
             </p>
             <div
               style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
@@ -202,14 +165,14 @@ export default function FeaturePopup({ feature, onClose }: Props) {
                   <p
                     style={{
                       margin: '0 0 2px 0',
-                      fontSize: '12px',
+                      fontSize: '10px',
                       fontWeight: 600,
                       color: '#d38800',
                     }}
                   >
                     {e.funder.name}
                   </p>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#777' }}>
+                  <p style={{ margin: 0, fontSize: '9px', color: '#777' }}>
                     {e.name}
                   </p>
                 </div>

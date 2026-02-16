@@ -11,6 +11,7 @@ const eslintConfig = defineConfig([
     // Ignore any type warnings
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      'react-hooks/set-state-in-effect': 'warn',
     },
   },
 ]);

@@ -14,11 +14,11 @@ export function AdminSidebar() {
       icon: Users,
       label: 'Bailleurs',
     },
-    {
-      href: '/admin/projects',
-      icon: FolderOpen,
-      label: 'Projets',
-    },
+    // {
+    //   href: '/admin/projects',
+    //   icon: FolderOpen,
+    //   label: 'Projets',
+    // },
     {
       href: '/admin/fundings',
       icon: Banknote,
@@ -50,7 +50,7 @@ export function AdminSidebar() {
                 'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
                 isActive
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
               )}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />

@@ -36,6 +36,32 @@ export function FundingTable({
     return pa ? `${pa.sigle} - ${pa.name}` : 'N/A';
   };
 
+  const formatMonthYear = (date?: Date) => {
+    if (!date) return '-';
+    const d = new Date(date);
+
+    return d.toLocaleDateString('fr-FR', {
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const formatAmount = (
+    amount?: number | string,
+    currency?: string,
+  ): string => {
+    if (amount === null || amount === undefined) return '-';
+
+    const value = typeof amount === 'string' ? parseFloat(amount) : amount;
+
+    if (isNaN(value)) return '-';
+
+    const formatted = new Intl.NumberFormat('fr-FR', {
+      maximumFractionDigits: 0,
+    }).format(value);
+
+    return currency ? `${formatted} ${currency}` : formatted;
+  };
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <table className="w-full">
@@ -49,6 +75,15 @@ export function FundingTable({
             </th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
               Projet
+            </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">
+              Date de debut
+            </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">
+              Date de fin
+            </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">
+              Montant
             </th>
             <th className="px-6 py-3 text-right text-sm font-semibold">
               Actions
@@ -68,7 +103,16 @@ export function FundingTable({
                 {getProtectedAreaName(funding.protectedArea.id?.toString())}
               </td>
               <td className="px-6 py-3 text-sm text-muted-foreground">
-                {getProjectName(funding.project?.id)}
+                {funding.name}
+              </td>
+              <td className="px-6 py-3 text-left text-sm font-semibold">
+                {formatMonthYear(funding.debut)}
+              </td>
+              <td className="px-6 py-3 text-left text-sm font-semibold">
+                {formatMonthYear(funding.end)}
+              </td>
+              <td className="px-6 py-3 text-left text-sm font-semibold">
+                {formatAmount(funding.amount)} {funding.currency}
               </td>
               <td className="px-6 py-3">
                 <div className="flex justify-end gap-2">

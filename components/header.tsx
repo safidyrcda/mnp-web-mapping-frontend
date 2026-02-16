@@ -21,9 +21,9 @@ export default function Header() {
 
           {/* Tagline */}
           <div className="text-center md:text-right">
-            <p className="text-sm uppercase tracking-widest text-amber-700 font-semibold mb-2">
+            {/* <p className="text-sm uppercase tracking-widest text-amber-700 font-semibold mb-2">
               Plateforme de Conservation
-            </p>
+            </p> */}
             <p className="text-lg text-gray-700 font-light">
               Explorer les Aires Protégées et les Partenaires de Financement
             </p>

@@ -21,6 +21,7 @@ export const protectedAreaSchema = z.object({
   sigle: z.string().min(1, 'Le sigle est requis'),
   name: z.string().min(1, 'Le nom est requis').max(100),
   size: z.number().optional().nullable(),
+  status: z.string().nullable().optional(),
 });
 
 export type ProtectedArea = z.infer<typeof protectedAreaSchema>;
@@ -30,6 +31,10 @@ export const fundingSchema = z.object({
   name: z.string().optional().nullable(),
   funderId: z.string().uuid('Un financeur doit être sélectionné'),
   projectId: z.string().optional().nullable(),
+  debut: z.date().optional().nullable(),
+  end: z.date().optional().nullable(),
+  amount: z.number().optional().nullable(),
+  currency: z.string().optional().nullable(),
   protectedAreaId: z
     .string()
     .uuid('Une aire protégée doit être sélectionnée')

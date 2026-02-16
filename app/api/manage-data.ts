@@ -10,7 +10,7 @@ if (!BASE_URL) {
 
 async function apiFetch<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const response = await fetch(`${BASE_URL}/${endpoint}`, {
     headers: {
@@ -81,6 +81,10 @@ export type GetFundingsDTO = {
   funder: { id: string };
   project?: Project;
   name: string;
+  debut?: Date;
+  end?: Date;
+  amount?: number;
+  currency?: string;
 }[];
 export const getFundings = async () => apiFetch<GetFundingsDTO>('fundings');
 
