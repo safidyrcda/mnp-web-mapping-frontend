@@ -24,16 +24,6 @@ export default function Page() {
           <div className="flex flex-col md:flex-row md:items-start md:gap-8">
             {/* Hero (texte) */}
             <div className="md:w-[50%]">
-              <div className="bg-white mb-4 rounded-xl shadow-md overflow-hidden border border-amber-100 p-6">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                  Explorez les Aires Protégées
-                </h2>
-                <p className="text-gray-600 text-lg">
-                  {`Cliquez sur n'importe quelle zone protégée sur la carte pour voir
-                  les détails et les informations de financement`}
-                </p>
-              </div>
-
               <div className="mb-3 md:mb-0">
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-amber-100 p-6">
                   <LegendSearch onSelectArea={handleSelectArea} />
