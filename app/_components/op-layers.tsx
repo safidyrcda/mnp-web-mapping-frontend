@@ -21,8 +21,12 @@ import { fetchData, fetchOne } from '../../components/api';
 import FeaturePopup from '@/app/_components/popup';
 import { Extent } from 'ol/extent';
 import TileArcGISRest from 'ol/source/TileArcGISRest';
+import { ProtectedArea } from '@/lib/schemas';
 
-export default function OpenLayersMap() {
+type Props = {
+  selectedArea?: ProtectedArea;
+};
+export default function OpenLayersMap({ selectedArea }: Props) {
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null); // add
@@ -75,6 +79,56 @@ export default function OpenLayersMap() {
 
     return cache[type];
   };
+
+  useEffect(() => {
+    const getMap = async () => {
+      if (!selectedArea || !mapRef.current || !selectedArea.id) return;
+
+      const map = mapRef.current;
+      const vectorLayer = map.getLayers().getArray()[1] as VectorLayer<any>;
+      if (!vectorLayer) return;
+
+      const source = vectorLayer.getSource() as VectorSource;
+      const features = source.getFeatures();
+
+      console.log(features);
+
+      const matchedFeature = features.find(
+        (f) => f.get('id') === selectedArea.id,
+      );
+
+      const fullFeature = await fetchOne(selectedArea.id);
+
+      if (matchedFeature) {
+        matchedFeature.setGeometry(
+          new GeoJSON().readGeometry(fullFeature.geometry, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+          }),
+        );
+
+        matchedFeature.setStyle(getSelectedStyleByType);
+        const geometry = matchedFeature.getGeometry();
+        if (geometry) {
+          map.getView().fit(geometry.getExtent(), {
+            padding: [80, 80, 80, 80],
+            duration: 500,
+            maxZoom: 18,
+          });
+
+          const extent = geometry.getExtent();
+          const coordinate = [
+            (extent[0] + extent[2]) / 2,
+            (extent[1] + extent[3]) / 2,
+          ];
+
+          setSelectedFeature(matchedFeature);
+          overlayRef.current?.setPosition(coordinate);
+        }
+      }
+    };
+    getMap();
+  }, [selectedArea]);
 
   useEffect(() => {
     let map: Map;
@@ -225,7 +279,7 @@ export default function OpenLayersMap() {
 
   return (
     <div style={{ position: 'relative' }}>
-      <div id="map" style={{ height: '750px', width: '100%' }} />
+      <div id="map" style={{ height: '600px', width: '100%' }} />
 
       <div ref={popupRef}>
         {selectedFeature && (

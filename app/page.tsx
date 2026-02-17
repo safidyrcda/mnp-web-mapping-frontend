@@ -1,8 +1,17 @@
+'use client';
+import { ProtectedArea } from '@/lib/schemas';
 import Header from './_components/header';
 import HeroSection from './_components/hero-section';
+import LegendSearch from './_components/legend-search';
 import OpenLayersMap from './_components/op-layers';
+import { useState } from 'react';
 
 export default function Page() {
+  const [selectedArea, setSelectedArea] = useState<ProtectedArea | undefined>();
+
+  const handleSelectArea = (area: ProtectedArea) => {
+    setSelectedArea(area);
+  };
   return (
     <main className="min-h-screen bg-white flex flex-col">
       <Header />
@@ -14,19 +23,27 @@ export default function Page() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row md:items-start md:gap-8">
             {/* Hero (texte) */}
-            <div className="md:w-[50%] mb-3 md:mb-0">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Explorez les Aires Protégées
-              </h2>
-              <p className="text-gray-600 text-lg">
-                {`Cliquez sur n'importe quelle zone protégée sur la carte pour voir
-          les détails et les informations de financement`}
-              </p>
+            <div className="md:w-[50%]">
+              <div className="bg-white mb-4 rounded-xl shadow-md overflow-hidden border border-amber-100 p-6">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Explorez les Aires Protégées
+                </h2>
+                <p className="text-gray-600 text-lg">
+                  {`Cliquez sur n'importe quelle zone protégée sur la carte pour voir
+                  les détails et les informations de financement`}
+                </p>
+              </div>
+
+              <div className="mb-3 md:mb-0">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-amber-100 p-6">
+                  <LegendSearch onSelectArea={handleSelectArea} />
+                </div>
+              </div>
             </div>
 
             {/* Map */}
             <div className="md:w-[50%] bg-white rounded-xl shadow-lg overflow-hidden border border-amber-100">
-              <OpenLayersMap />
+              <OpenLayersMap selectedArea={selectedArea} />
             </div>
           </div>
         </div>
