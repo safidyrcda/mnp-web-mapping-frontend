@@ -7,7 +7,7 @@ import {
   createFunder,
   updateFunder,
   deleteFunder,
-} from '@/app/api/manage-data';
+} from '@/app/_api/manage-data';
 import { FunderForm } from './funder-form';
 import { FundersTable } from './funders-table';
 import { BaseModal } from '@/components/modals/base-modal';

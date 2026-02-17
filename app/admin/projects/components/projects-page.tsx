@@ -7,7 +7,7 @@ import {
   createProject,
   updateProject,
   deleteProject,
-} from '@/app/api/manage-data';
+} from '@/app/_api/manage-data';
 import { ProjectForm } from './project-form';
 import { ProjectsTable } from './projects-table';
 import { BaseModal } from '@/components/modals/base-modal';

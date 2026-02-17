@@ -11,7 +11,7 @@ import {
   getProjects,
   getProtectedAreas,
   GetFundingsDTO,
-} from '@/app/api/manage-data';
+} from '@/app/_api/manage-data';
 import { FundingForm } from './funding-form';
 import { FundingTable } from './funding-table';
 import { BaseModal } from '@/components/modals/base-modal';

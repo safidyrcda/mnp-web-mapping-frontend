@@ -1,6 +1,6 @@
-import Header from '../components/header';
-import HeroSection from '../components/hero-section';
-import OpenLayersMap from '../components/op-layers';
+import Header from './_components/header';
+import HeroSection from './_components/hero-section';
+import OpenLayersMap from './_components/op-layers';
 
 export default function Page() {
   return (
@@ -14,7 +14,7 @@ export default function Page() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row md:items-start md:gap-8">
             {/* Hero (texte) */}
-            <div className="md:w-1/3 mb-3 md:mb-0">
+            <div className="md:w-[50%] mb-3 md:mb-0">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 Explorez les Aires Protégées
               </h2>
@@ -25,7 +25,7 @@ export default function Page() {
             </div>
 
             {/* Map */}
-            <div className="md:w-2/3 bg-white rounded-xl shadow-lg overflow-hidden border border-amber-100">
+            <div className="md:w-[50%] bg-white rounded-xl shadow-lg overflow-hidden border border-amber-100">
               <OpenLayersMap />
             </div>
           </div>

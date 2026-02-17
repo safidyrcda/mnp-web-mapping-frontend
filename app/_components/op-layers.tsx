@@ -9,7 +9,6 @@ import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 
-import XYZ from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
 
 import GeoJSON from 'ol/format/GeoJSON';
@@ -18,11 +17,10 @@ import Overlay from 'ol/Overlay';
 import { Fill, Stroke, Style } from 'ol/style';
 import Select from 'ol/interaction/Select';
 import { click } from 'ol/events/condition';
-import { fetchData, fetchOne } from './api';
-import FeaturePopup from './popup';
+import { fetchData, fetchOne } from '../../components/api';
+import FeaturePopup from '@/app/_components/popup';
 import { Extent } from 'ol/extent';
 import TileArcGISRest from 'ol/source/TileArcGISRest';
-import { OSM } from 'ol/source';
 
 export default function OpenLayersMap() {
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
@@ -33,10 +31,12 @@ export default function OpenLayersMap() {
 
   const typeColors: Record<string, string> = {
     PN: '#2ecc71',
-    RS: '#3498db',
-    RNI: '#f1c40f',
+    RS: '#014d23',
+    RNI: '#b86f09',
   };
+
   const styleCacheRef = useRef<Record<string, Style>>({});
+  const selectedStyleCacheRef = useRef<Record<string, Style>>({});
 
   const getStyleByType = (feature: any) => {
     const type = feature.get('status');
@@ -47,11 +47,28 @@ export default function OpenLayersMap() {
     if (!cache[type]) {
       cache[type] = new Style({
         fill: new Fill({
-          color: color + '67',
+          color: color,
+        }),
+      });
+    }
+
+    return cache[type];
+  };
+
+  const getSelectedStyleByType = (feature: any) => {
+    const type = feature.get('status');
+    const color = typeColors[type] || '#95a5a6';
+
+    const cache = selectedStyleCacheRef.current;
+
+    if (!cache[type]) {
+      cache[type] = new Style({
+        fill: new Fill({
+          color: color + '67', // plus transparent
         }),
         stroke: new Stroke({
           color: color,
-          width: 2,
+          width: 3,
         }),
       });
     }
@@ -119,7 +136,7 @@ export default function OpenLayersMap() {
       const clickSelect = new Select({
         condition: click,
         layers: [vectorLayer],
-        style: getStyleByType,
+        style: getSelectedStyleByType,
       });
 
       map.addInteraction(clickSelect);
