@@ -11,6 +11,7 @@ import {
 } from '@/lib/schemas';
 import { FormWrapper } from '@/components/form/form-wrapper';
 import { FormInput, FormSelect } from '@/components/form/form-fields';
+import { FormMultiSelect } from '@/components/form-multi-select';
 
 interface FundingFormProps {
   initialData?: Funding;
@@ -33,7 +34,6 @@ export function FundingForm({
   const form = useForm<Funding>({
     resolver: zodResolver(fundingSchema),
     defaultValues: {
-      funderId: initialData?.funderId ?? '',
       projectId: initialData?.projectId ?? undefined,
       name: initialData?.name ?? '',
     },
@@ -63,13 +63,14 @@ export function FundingForm({
         label="Nom du financement"
         placeholder="ex. Financement GEF REDD+"
       />
-      <FormSelect
+      <FormMultiSelect
         control={form.control}
-        name="funderId"
-        label="Financeur"
-        placeholder="Sélectionner un financeur"
+        name="funders"
+        label="Financeurs"
+        placeholder="Sélectionner un ou plusieurs financeurs"
+        description="Vous pouvez sélectionner plusieurs financeurs"
         options={funders.map((f) => ({
-          value: f.id!,
+          value: f.id || '',
           label: f.name,
         }))}
       />

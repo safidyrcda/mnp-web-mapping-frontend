@@ -123,7 +123,7 @@ export function FundingTable({
                       onEdit({
                         id: funding.id,
                         name: funding.name,
-                        funderId: funding.funder.id,
+
                         projectId: funding.project?.id,
                       })
                     }
@@ -138,7 +138,7 @@ export function FundingTable({
                       onDelete({
                         id: funding.id,
                         name: funding.name,
-                        funderId: funding.funder.id,
+
                         projectId: funding.project?.id,
                       })
                     }
