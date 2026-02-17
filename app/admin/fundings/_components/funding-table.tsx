@@ -3,7 +3,7 @@
 import { Funding, Funder, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
-import { GetFundingsDTO } from '@/app/api/manage-data';
+import { GetFundingsDTO } from '@/app/_api/manage-data';
 
 interface FundingTableProps {
   fundings: GetFundingsDTO;
