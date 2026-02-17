@@ -19,7 +19,7 @@ export default function Page() {
 
       {/* Map Section */}
       {/* Map Section */}
-      <section className="w-full py-8 md:py-12 bg-gray-50">
+      <section className="w-full py-3 md:py-3 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row md:items-start md:gap-8">
             {/* Hero (texte) */}

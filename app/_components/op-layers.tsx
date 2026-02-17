@@ -8,7 +8,6 @@ import View from 'ol/View';
 
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
-
 import VectorSource from 'ol/source/Vector';
 
 import GeoJSON from 'ol/format/GeoJSON';
@@ -26,12 +25,17 @@ import { ProtectedArea } from '@/lib/schemas';
 type Props = {
   selectedArea?: ProtectedArea;
 };
+
 export default function OpenLayersMap({ selectedArea }: Props) {
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
+
   const popupRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<Map | null>(null); // add
-  const overlayRef = useRef<Overlay | null>(null); // add
-  const initialExtentRef = useRef<Extent | null>(null); // add
+  const mapRef = useRef<Map | null>(null);
+  const overlayRef = useRef<Overlay | null>(null);
+  const initialExtentRef = useRef<Extent | null>(null);
+
+  const vectorLayerRef = useRef<VectorLayer<any> | null>(null);
+  const vectorSourceRef = useRef<VectorSource | null>(null);
 
   const typeColors: Record<string, string> = {
     PN: '#2ecc71',
@@ -50,9 +54,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
     if (!cache[type]) {
       cache[type] = new Style({
-        fill: new Fill({
-          color: color,
-        }),
+        fill: new Fill({ color }),
       });
     }
 
@@ -67,11 +69,9 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
     if (!cache[type]) {
       cache[type] = new Style({
-        fill: new Fill({
-          color: color + '67', // plus transparent
-        }),
+        fill: new Fill({ color: color + '67' }),
         stroke: new Stroke({
-          color: color,
+          color,
           width: 3,
         }),
       });
@@ -80,59 +80,65 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     return cache[type];
   };
 
+  /**
+   * Fonction centrale de sélection
+   */
+  const selectFeatureById = async (id: string) => {
+    const map = mapRef.current;
+    const source = vectorSourceRef.current;
+    const overlay = overlayRef.current;
+
+    if (!map || !source || !overlay) return;
+
+    const feature = source.getFeatures().find((f) => f.get('id') === id);
+
+    if (!feature) return;
+
+    const fullFeature = await fetchOne(id);
+
+    feature.setGeometry(
+      new GeoJSON().readGeometry(fullFeature.geometry, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:3857',
+      }),
+    );
+
+    feature.setProperties(fullFeature.properties);
+    feature.setStyle(getSelectedStyleByType);
+
+    const geometry = feature.getGeometry();
+    if (!geometry) return;
+
+    const extent = geometry.getExtent();
+    const coordinate = [
+      (extent[0] + extent[2]) / 2,
+      (extent[1] + extent[3]) / 2,
+    ];
+
+    setSelectedFeature(feature);
+    overlay.setPosition(coordinate);
+
+    map.getView().fit(extent, {
+      padding: [80, 80, 80, 80],
+      duration: 500,
+      maxZoom: 18,
+    });
+  };
+
+  /**
+   * Réagit à selectedArea (sélection externe)
+   */
   useEffect(() => {
-    const getMap = async () => {
-      if (!selectedArea || !mapRef.current || !selectedArea.id) return;
-
-      const map = mapRef.current;
-      const vectorLayer = map.getLayers().getArray()[1] as VectorLayer<any>;
-      if (!vectorLayer) return;
-
-      const source = vectorLayer.getSource() as VectorSource;
-      const features = source.getFeatures();
-
-      console.log(features);
-
-      const matchedFeature = features.find(
-        (f) => f.get('id') === selectedArea.id,
-      );
-
-      const fullFeature = await fetchOne(selectedArea.id);
-
-      if (matchedFeature) {
-        matchedFeature.setGeometry(
-          new GeoJSON().readGeometry(fullFeature.geometry, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
-          }),
-        );
-
-        matchedFeature.setStyle(getSelectedStyleByType);
-        const geometry = matchedFeature.getGeometry();
-        if (geometry) {
-          map.getView().fit(geometry.getExtent(), {
-            padding: [80, 80, 80, 80],
-            duration: 500,
-            maxZoom: 18,
-          });
-
-          const extent = geometry.getExtent();
-          const coordinate = [
-            (extent[0] + extent[2]) / 2,
-            (extent[1] + extent[3]) / 2,
-          ];
-
-          setSelectedFeature(matchedFeature);
-          overlayRef.current?.setPosition(coordinate);
-        }
-      }
-    };
-    getMap();
+    if (selectedArea?.id) {
+      selectFeatureById(selectedArea.id);
+    }
   }, [selectedArea]);
 
+  /**
+   * Initialisation carte
+   */
   useEffect(() => {
     let map: Map;
-    let overlay: Overlay;
 
     async function initializeMap() {
       map = new Map({
@@ -152,14 +158,14 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
       mapRef.current = map;
 
-      overlay = new Overlay({
+      const overlay = new Overlay({
         element: popupRef.current!,
         positioning: 'bottom-center',
         stopEvent: true,
         offset: [0, -12],
       });
-      overlayRef.current = overlay;
 
+      overlayRef.current = overlay;
       map.addOverlay(overlay);
 
       const geojson = await fetchData();
@@ -170,12 +176,14 @@ export default function OpenLayersMap({ selectedArea }: Props) {
       });
 
       const vectorSource = new VectorSource({ features });
+      vectorSourceRef.current = vectorSource;
 
       const vectorLayer = new VectorLayer({
         source: vectorSource,
         style: getStyleByType,
       });
 
+      vectorLayerRef.current = vectorLayer;
       map.addLayer(vectorLayer);
 
       const extent = vectorSource.getExtent();
@@ -195,55 +203,16 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
       map.addInteraction(clickSelect);
 
-      clickSelect.on('select', async (e) => {
+      clickSelect.on('select', (e) => {
         const feature = e.selected[0];
-
         if (!feature) {
           setSelectedFeature(null);
           overlay.setPosition(undefined);
           return;
         }
 
-        const id = feature.get('id'); // ou ap_id selon ce que tu as mis
-
-        try {
-          // Récupérer les détails complets + géométrie complète depuis le backend
-          const fullFeature = await fetchOne(id); // à implémenter dans api.ts pour récupérer une feature complète par ID
-
-          // Remplacer la géométrie simplifiée par la complète
-          feature.setGeometry(
-            new GeoJSON().readGeometry(fullFeature.geometry, {
-              dataProjection: 'EPSG:4326',
-              featureProjection: 'EPSG:3857',
-            }),
-          );
-
-          // Mettre les propriétés complètes
-          feature.setProperties(fullFeature.properties);
-
-          setSelectedFeature(feature);
-
-          // Calculer la position du popup (centre de la géométrie complète)
-          const geometry = feature.getGeometry();
-          if (!geometry) return;
-
-          const extent = geometry.getExtent();
-          const coordinate = [
-            (extent[0] + extent[2]) / 2,
-            (extent[1] + extent[3]) / 2,
-          ];
-
-          overlay.setPosition(coordinate);
-
-          // Ajuster le zoom sur la géométrie complète
-          map.getView().fit(geometry.getExtent(), {
-            padding: [80, 80, 80, 80],
-            duration: 500,
-            maxZoom: 18,
-          });
-        } catch (err) {
-          console.error('Erreur récupération détails feature :', err);
-        }
+        const id = feature.get('id');
+        selectFeatureById(id);
       });
 
       map.on('pointermove', (evt) => {
@@ -267,7 +236,6 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     const map = mapRef.current;
     const extent = initialExtentRef.current;
 
-    console.log(map, extent);
     if (map && extent) {
       map.getView().fit(extent, {
         padding: [60, 60, 60, 60],
@@ -279,7 +247,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
   return (
     <div style={{ position: 'relative' }}>
-      <div id="map" style={{ height: '600px', width: '100%' }} />
+      <div id="map" style={{ height: '650px', width: '100%' }} />
 
       <div ref={popupRef}>
         {selectedFeature && (

@@ -44,7 +44,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
     <div
       style={{
         position: 'absolute',
-        transform: 'translate(-10%, 0%)',
+        transform: 'translate(-30%, -10%)',
         background: 'white',
         borderRadius: '12px',
         minWidth: '280px',
@@ -53,6 +53,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
           '0 20px 50px rgba(211, 136, 0, 0.25), 0 0 1px rgba(0,0,0,0.1)',
         pointerEvents: 'auto',
         border: '1px solid rgba(211, 136, 0, 0.1)',
+        paddingBottom: '4px',
       }}
     >
       {/* Header with gradient */}
@@ -62,6 +63,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
           padding: '16px',
           color: 'white',
           position: 'relative',
+          borderRadius: '12px 12px 0px 0px',
         }}
       >
         <button
@@ -98,7 +100,14 @@ export default function FeaturePopup({ feature, onClose }: Props) {
       </div>
 
       {/* Content */}
-      <div style={{ padding: '16px', maxHeight: '300px', overflowY: 'scroll' }}>
+      <div
+        style={{
+          padding: '16px',
+          maxHeight: '300px',
+          overflowY: 'scroll',
+          marginRight: '2.5px',
+        }}
+      >
         <div
           style={{
             borderTop: '1px solid #f0e6d2',
