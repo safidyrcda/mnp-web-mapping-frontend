@@ -144,7 +144,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
         </div>
 
         {/* Funding Partners */}
-        {fundings.length > 0 && (
+        {/* {fundings.length > 0 && (
           <div style={{ borderTop: '1px solid #f0e6d2', paddingTop: '12px' }}>
             <p
               style={{
@@ -201,7 +201,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
           >
             Loading funding information...
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
