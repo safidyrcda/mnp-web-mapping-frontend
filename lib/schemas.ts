@@ -29,7 +29,7 @@ export type ProtectedArea = z.infer<typeof protectedAreaSchema>;
 export const fundingSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().optional().nullable(),
-
+  funderId: z.string().optional().nullable(),
   funders: z
     .array(z.string().uuid())
     .min(1, 'Au moins un financeur doit être sélectionné')
