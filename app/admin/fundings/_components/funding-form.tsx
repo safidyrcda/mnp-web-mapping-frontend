@@ -10,8 +10,10 @@ import {
   type ProtectedArea,
 } from '@/lib/schemas';
 import { FormWrapper } from '@/components/form/form-wrapper';
-import { FormInput, FormSelect } from '@/components/form/form-fields';
+import { FormInput } from '@/components/form/form-fields';
 import { FormMultiSelect } from '@/components/form-multi-select';
+import { useEffect, useState } from 'react';
+import { fetchFundersByFunding } from '@/app/_api/fundings/get-fundings-by-ap.api';
 
 interface FundingFormProps {
   initialData?: Funding;
@@ -31,18 +33,39 @@ export function FundingForm({
   loading = false,
   selectedProtectedArea,
 }: FundingFormProps) {
+  const [fundingFunders, setFundingFunders] = useState<Funder[]>([]);
   const form = useForm<Funding>({
     resolver: zodResolver(fundingSchema),
     defaultValues: {
       projectId: initialData?.projectId ?? undefined,
       name: initialData?.name ?? '',
+      debut: initialData?.debut,
+      end: initialData?.end,
+      currency: initialData?.currency,
+      amount: initialData?.amount,
     },
   });
+
+  const fetchFunders = async () => {
+    if (initialData && initialData.id) {
+      const res = await fetchFundersByFunding(initialData?.id);
+
+      setFundingFunders(res);
+
+      form.setValue(
+        'funders',
+        res.map((f: Funder) => f.id || ''),
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchFunders();
+  }, [initialData]);
 
   const handleSubmit = async (data: Funding) => {
     if (data.projectId === 'empty') data.projectId = null;
 
-    console.log(data);
     await onSubmit({
       ...data,
       id: initialData?.id,
@@ -63,6 +86,28 @@ export function FundingForm({
         label="Nom du financement"
         placeholder="ex. Financement GEF REDD+"
       />
+      <FormInput
+        control={form.control}
+        name="amount"
+        label="Montant"
+        placeholder=""
+      />
+      <FormInput
+        control={form.control}
+        name="currency"
+        label=" Devise"
+        placeholder="Ar"
+      />
+
+      <FormInput
+        control={form.control}
+        name="debut"
+        type="date"
+        label="Debut"
+      />
+
+      <FormInput control={form.control} name="end" type="date" label="Fin" />
+
       <FormMultiSelect
         control={form.control}
         name="funders"

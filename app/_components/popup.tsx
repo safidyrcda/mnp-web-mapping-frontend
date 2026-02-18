@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { fetchFundings } from '@/app/_api/fundings/get-fundings-by-ap.api';
+import {
+  fetchApFunders,
+  fetchFundings,
+} from '@/app/_api/fundings/get-fundings-by-ap.api';
 import { Funder, ProtectedArea } from '@/lib/schemas';
 
 type Props = {
@@ -16,7 +19,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
     const id = props.id;
 
     if (!id) return;
-    const res: Partial<Funder>[] = await fetchFundings(id);
+    const res: Partial<Funder>[] = await fetchApFunders(id);
 
     setFundings(res);
   };

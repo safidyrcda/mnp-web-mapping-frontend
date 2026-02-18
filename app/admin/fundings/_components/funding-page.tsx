@@ -73,6 +73,7 @@ export function FundingPage() {
 
   const handleEditClick = (funding: Funding) => {
     setSelectedFunding(funding);
+
     setIsFormOpen(true);
   };
 

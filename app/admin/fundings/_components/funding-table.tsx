@@ -16,26 +16,9 @@ interface FundingTableProps {
 
 export function FundingTable({
   fundings,
-  funders,
-  projects,
-  protectedAreas,
   onEdit,
   onDelete,
 }: FundingTableProps) {
-  const getFunderName = (id: string) => {
-    return funders.find((f) => f.id === id)?.name || 'N/A';
-  };
-
-  const getProjectName = (id: string | null | undefined) => {
-    if (!id) return 'Aucun';
-    return projects.find((p) => p.id === id)?.name || 'N/A';
-  };
-
-  const getProtectedAreaName = (id?: string) => {
-    const pa = protectedAreas.find((p) => p.id === id);
-    return pa ? `${pa.sigle} - ${pa.name}` : 'N/A';
-  };
-
   const formatMonthYear = (date?: Date) => {
     if (!date) return '-';
     const d = new Date(date);
@@ -71,12 +54,6 @@ export function FundingTable({
               Bailleur
             </th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
-              Aire protégée
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">
-              Projet
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">
               Date de debut
             </th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
@@ -97,13 +74,13 @@ export function FundingTable({
               className="border-b border-border hover:bg-muted/30 transition-colors"
             >
               <td className="px-6 py-3 text-sm text-muted-foreground">
-                {getFunderName(funding.funder?.id)}
-              </td>
-              <td className="px-6 py-3 text-sm text-muted-foreground">
-                {getProtectedAreaName(funding.protectedArea.id?.toString())}
-              </td>
-              <td className="px-6 py-3 text-sm text-muted-foreground">
-                {funding.name}
+                {funding.funderFundings.map((f) => {
+                  return (
+                    <span key={f.id}>
+                      {f.funder.name} <br></br>
+                    </span>
+                  );
+                })}
               </td>
               <td className="px-6 py-3 text-left text-sm font-semibold">
                 {formatMonthYear(funding.debut)}
@@ -123,7 +100,10 @@ export function FundingTable({
                       onEdit({
                         id: funding.id,
                         name: funding.name,
-
+                        amount: funding.amount,
+                        currency: funding.currency,
+                        debut: funding.debut,
+                        end: funding.end,
                         projectId: funding.project?.id,
                       })
                     }

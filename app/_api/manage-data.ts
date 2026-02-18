@@ -1,6 +1,12 @@
 'use server';
 
-import { Funder, Project, Funding, ProtectedArea } from '@/lib/schemas';
+import {
+  Funder,
+  Project,
+  Funding,
+  ProtectedArea,
+  FunderFunding,
+} from '@/lib/schemas';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -85,6 +91,7 @@ export type GetFundingsDTO = {
   end?: Date;
   amount?: number;
   currency?: string;
+  funderFundings: FunderFunding[];
 }[];
 export const getFundings = async () => apiFetch<GetFundingsDTO>('fundings');
 
@@ -96,7 +103,7 @@ export const createFunding = async (data: Partial<Funding>) =>
 
 export const updateFunding = async (id: string, data: Partial<Funding>) =>
   apiFetch<Funding>(`fundings/${id}`, {
-    method: 'PUT',
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 
