@@ -156,7 +156,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
                 letterSpacing: '0.5px',
               }}
             >
-              Bailleurs({fundings.length})
+              Partenaires de financement({fundings.length})
             </p>
             <div
               style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
