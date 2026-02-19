@@ -36,7 +36,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
   const vectorLayerRef = useRef<VectorLayer<any> | null>(null);
   const vectorSourceRef = useRef<VectorSource | null>(null);
-
+  const lastSelectedFeatureRef = useRef<any>(null);
   const typeColors: Record<string, string> = {
     PN: '#2ecc71',
     RS: '#014d23',
@@ -80,9 +80,6 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     return cache[type];
   };
 
-  /**
-   * Fonction centrale de sélection
-   */
   const selectFeatureById = async (id: string) => {
     const map = mapRef.current;
     const source = vectorSourceRef.current;
@@ -90,8 +87,12 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
     if (!map || !source || !overlay) return;
 
-    const feature = source.getFeatures().find((f) => f.get('id') === id);
+    if (lastSelectedFeatureRef.current) {
+      lastSelectedFeatureRef.current.setStyle(undefined);
+      lastSelectedFeatureRef.current = null;
+    }
 
+    const feature = source.getFeatures().find((f) => f.get('id') === id);
     if (!feature) return;
 
     const fullFeature = await fetchOne(id);
@@ -104,7 +105,10 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     );
 
     feature.setProperties(fullFeature.properties);
+
     feature.setStyle(getSelectedStyleByType);
+
+    lastSelectedFeatureRef.current = feature;
 
     const geometry = feature.getGeometry();
     if (!geometry) return;
@@ -125,18 +129,13 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     });
   };
 
-  /**
-   * Réagit à selectedArea (sélection externe)
-   */
   useEffect(() => {
+    console.log('Selected area changed:', selectedArea);
     if (selectedArea?.id) {
       selectFeatureById(selectedArea.id);
     }
   }, [selectedArea]);
 
-  /**
-   * Initialisation carte
-   */
   useEffect(() => {
     let map: Map;
 
@@ -230,6 +229,11 @@ export default function OpenLayersMap({ selectedArea }: Props) {
   }, []);
 
   const onClosePopup = () => {
+    if (lastSelectedFeatureRef.current) {
+      lastSelectedFeatureRef.current.setStyle(undefined);
+      lastSelectedFeatureRef.current = null;
+    }
+
     setSelectedFeature(null);
     overlayRef.current?.setPosition(undefined);
 

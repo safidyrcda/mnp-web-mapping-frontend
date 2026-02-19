@@ -3,7 +3,7 @@
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:4000';
 
-export const fetchFundings = async (protectedAreaId: string) => {
+export const fetchApFunders = async (protectedAreaId: string) => {
   const response = await fetch(
     `${BACKEND_URL}/fundings/protected-area/${protectedAreaId}/funders`,
   );
@@ -11,7 +11,7 @@ export const fetchFundings = async (protectedAreaId: string) => {
   return response.json();
 };
 
-export const fetchApFunders = async (protectedAreaId: string) => {
+export const fetchApFundings = async (protectedAreaId: string) => {
   const response = await fetch(
     `${BACKEND_URL}/fundings/protected-area/${protectedAreaId}`,
   );
