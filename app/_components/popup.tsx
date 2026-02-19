@@ -19,7 +19,7 @@ export default function FeaturePopup({ feature, onClose }: Props) {
     const id = props.id;
 
     if (!id) return;
-    const res: Partial<Funder>[] = await fetchApFundings(id);
+    const res: Partial<Funder>[] = await fetchApFunders(id);
 
     setFundings(res);
   };

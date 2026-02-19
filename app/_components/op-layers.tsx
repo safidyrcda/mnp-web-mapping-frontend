@@ -21,6 +21,7 @@ import FeaturePopup from '@/app/_components/popup';
 import { Extent } from 'ol/extent';
 import TileArcGISRest from 'ol/source/TileArcGISRest';
 import { ProtectedArea } from '@/lib/schemas';
+import { Loader2 } from 'lucide-react';
 
 type Props = {
   selectedArea?: ProtectedArea;
@@ -37,6 +38,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
   const vectorLayerRef = useRef<VectorLayer<any> | null>(null);
   const vectorSourceRef = useRef<VectorSource | null>(null);
   const lastSelectedFeatureRef = useRef<any>(null);
+  const selectInteractionRef = useRef<Select | null>(null);
   const typeColors: Record<string, string> = {
     PN: '#2ecc71',
     RS: '#014d23',
@@ -80,6 +82,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     return cache[type];
   };
 
+  const [isLoadingSelection, setIsLoadingSelection] = useState(false);
   const selectFeatureById = async (id: string) => {
     const map = mapRef.current;
     const source = vectorSourceRef.current;
@@ -87,46 +90,55 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
     if (!map || !source || !overlay) return;
 
-    if (lastSelectedFeatureRef.current) {
-      lastSelectedFeatureRef.current.setStyle(undefined);
-      lastSelectedFeatureRef.current = null;
+    setIsLoadingSelection(true);
+
+    try {
+      if (lastSelectedFeatureRef.current) {
+        lastSelectedFeatureRef.current.setStyle(undefined);
+        lastSelectedFeatureRef.current = null;
+      }
+
+      const feature = source.getFeatures().find((f) => f.get('id') === id);
+      if (!feature) return;
+
+      const fullFeature = await fetchOne(id);
+
+      feature.setGeometry(
+        new GeoJSON().readGeometry(fullFeature.geometry, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857',
+        }),
+      );
+
+      feature.setProperties(fullFeature.properties);
+      feature.setStyle(getSelectedStyleByType);
+
+      lastSelectedFeatureRef.current = feature;
+
+      const geometry = feature.getGeometry();
+      if (!geometry) return;
+
+      const extent = geometry.getExtent();
+      const coordinate = [
+        (extent[0] + extent[2]) / 2,
+        (extent[1] + extent[3]) / 2,
+      ];
+
+      setSelectedFeature(feature);
+      overlay.setPosition(coordinate);
+
+      await new Promise<void>((resolve) => {
+        map.getView().fit(extent, {
+          padding: [80, 80, 80, 80],
+          duration: 600,
+          maxZoom: 18,
+        });
+
+        map.once('moveend', () => resolve());
+      });
+    } finally {
+      setIsLoadingSelection(false);
     }
-
-    const feature = source.getFeatures().find((f) => f.get('id') === id);
-    if (!feature) return;
-
-    const fullFeature = await fetchOne(id);
-
-    feature.setGeometry(
-      new GeoJSON().readGeometry(fullFeature.geometry, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857',
-      }),
-    );
-
-    feature.setProperties(fullFeature.properties);
-
-    feature.setStyle(getSelectedStyleByType);
-
-    lastSelectedFeatureRef.current = feature;
-
-    const geometry = feature.getGeometry();
-    if (!geometry) return;
-
-    const extent = geometry.getExtent();
-    const coordinate = [
-      (extent[0] + extent[2]) / 2,
-      (extent[1] + extent[3]) / 2,
-    ];
-
-    setSelectedFeature(feature);
-    overlay.setPosition(coordinate);
-
-    map.getView().fit(extent, {
-      padding: [80, 80, 80, 80],
-      duration: 500,
-      maxZoom: 18,
-    });
   };
 
   useEffect(() => {
@@ -200,10 +212,13 @@ export default function OpenLayersMap({ selectedArea }: Props) {
         style: getSelectedStyleByType,
       });
 
+      selectInteractionRef.current = clickSelect;
+
       map.addInteraction(clickSelect);
 
       clickSelect.on('select', (e) => {
         const feature = e.selected[0];
+
         if (!feature) {
           setSelectedFeature(null);
           overlay.setPosition(undefined);
@@ -211,6 +226,9 @@ export default function OpenLayersMap({ selectedArea }: Props) {
         }
 
         const id = feature.get('id');
+
+        clickSelect.getFeatures().clear();
+
         selectFeatureById(id);
       });
 
@@ -251,10 +269,55 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
   return (
     <div style={{ position: 'relative' }}>
+      {isLoadingSelection && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            background: 'rgba(255,255,255,0.45)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            transition: 'opacity 0.3s ease',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '24px 32px',
+              background: 'white',
+              borderRadius: '16px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+            }}
+          >
+            <Loader2
+              size={42}
+              strokeWidth={2.5}
+              className="animate-spin text-green-600"
+            />
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#444',
+              }}
+            >
+              Chargement...
+            </span>
+          </div>
+        </div>
+      )}
+
       <div id="map" style={{ height: '650px', width: '100%' }} />
 
       <div ref={popupRef}>
-        {selectedFeature && (
+        {selectedFeature && !isLoadingSelection && (
           <FeaturePopup
             feature={selectedFeature}
             coordinate={selectedFeature.getGeometry()}
