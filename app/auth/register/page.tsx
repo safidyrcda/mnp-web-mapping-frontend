@@ -55,18 +55,7 @@ export default function RegisterPage() {
 
         password: formData.password,
       });
-
-      // Backend renvoie juste { message: "User created. Please confirm your email." }
-      if (response.message) {
-        setSuccess(true);
-
-        // Redirection vers la page de vérification
-        setTimeout(() => {
-          router.push(`/auth/verify?token_sent=true`);
-        }, 2000);
-      } else {
-        setError(response.message || 'Registration failed');
-      }
+      setSuccess(true);
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue');
     } finally {
@@ -99,15 +88,9 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-rose-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <div className="text-3xl font-bold text-amber-600">SKINSCARE</div>
-          </div>
           <CardTitle className="text-2xl text-center">
             Créer un compte
           </CardTitle>
-          <CardDescription className="text-center">
-            Inscrivez-vous pour accéder à votre espace employé
-          </CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
@@ -118,36 +101,6 @@ export default function RegisterPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom</Label>
-                <Input
-                  id="firstName"
-                  placeholder="Jean"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
-                  }
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Nom</Label>
-                <Input
-                  id="lastName"
-                  placeholder="Dupont"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
-                  }
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -160,20 +113,6 @@ export default function RegisterPage() {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+261 34 00 000 00"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
                 disabled={isLoading}
               />
             </div>
