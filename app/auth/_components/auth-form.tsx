@@ -75,6 +75,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       console.error(error);
     } finally {
       setLoading(false);
+      router.push('/');
     }
   };
 
