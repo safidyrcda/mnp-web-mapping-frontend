@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   fetchApFunders,
   fetchApFundings,
-} from '@/app/_api/fundings/get-fundings-by-ap.api';
+} from '@/app/api/fundings/get-fundings-by-ap.api';
 import { Funder, ProtectedArea } from '@/lib/schemas';
 
 type Props = {

@@ -10,20 +10,31 @@ interface ProjectsTableProps {
   onDelete: (project: Project) => void;
 }
 
-export function ProjectsTable({ projects, onEdit, onDelete }: ProjectsTableProps) {
+export function ProjectsTable({
+  projects,
+  onEdit,
+  onDelete,
+}: ProjectsTableProps) {
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <table className="w-full">
         <thead>
           <tr className="border-b border-border bg-muted/50">
             <th className="px-6 py-3 text-left text-sm font-semibold">Nom</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">Description</th>
-            <th className="px-6 py-3 text-right text-sm font-semibold">Actions</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">
+              Description
+            </th>
+            <th className="px-6 py-3 text-right text-sm font-semibold">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
           {projects.map((project) => (
-            <tr key={project.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+            <tr
+              key={project.id}
+              className="border-b border-border hover:bg-muted/30 transition-colors"
+            >
               <td className="px-6 py-3 text-sm font-medium">{project.name}</td>
               <td className="px-6 py-3 text-sm text-muted-foreground line-clamp-2">
                 {project.fullname || '-'}

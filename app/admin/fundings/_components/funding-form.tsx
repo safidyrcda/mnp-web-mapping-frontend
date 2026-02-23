@@ -13,7 +13,7 @@ import { FormWrapper } from '@/components/form/form-wrapper';
 import { FormInput } from '@/components/form/form-fields';
 import { FormMultiSelect } from '@/components/form-multi-select';
 import { useEffect, useState } from 'react';
-import { fetchFundersByFunding } from '@/app/_api/fundings/get-fundings-by-ap.api';
+import { fetchFundersByFunding } from '@/app/api/fundings/get-fundings-by-ap.api';
 
 interface FundingFormProps {
   initialData?: Funding;

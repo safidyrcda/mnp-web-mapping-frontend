@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { ProtectedArea } from '@/lib/schemas';
-import { getProtectedAreas } from '../_api/manage-data';
+import { getProtectedAreas } from '../api/manage-data';
 
 type Props = {
   onSelectArea: (area: ProtectedArea, coordinates?: number[]) => void;
