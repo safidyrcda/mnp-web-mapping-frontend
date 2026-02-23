@@ -37,14 +37,16 @@ function VerifyContent() {
     async function confirm() {
       try {
         if (token) {
-          const response = await confirmEmail(token);
+          await confirmEmail(token);
 
-          console.log('✅ Email confirmation response:', response);
+          setSuccess(true);
         }
       } catch (err: any) {
         setError(err.message || 'Une erreur est survenue');
       } finally {
         setIsLoading(false);
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        router.push('/auth/login');
       }
     }
 
@@ -89,10 +91,6 @@ function VerifyContent() {
 
         {error && (
           <CardContent>
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-
             <div className="text-center mt-4">
               <Link
                 href="/auth/login"

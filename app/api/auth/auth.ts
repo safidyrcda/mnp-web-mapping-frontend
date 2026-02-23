@@ -77,15 +77,9 @@ export async function confirmEmail(token: string) {
       method: 'POST',
     });
 
-    console.log('✅ Email confirmation response:', response);
-
     return response;
   } catch (error) {
-    return {
-      success: false,
-      message:
-        error instanceof Error ? error.message : 'Email confirmation failed',
-    };
+    throw new Error('Email confirmation failed');
   }
 }
 

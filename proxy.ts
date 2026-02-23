@@ -19,7 +19,7 @@ export function proxy(request: NextRequest) {
     session &&
     (pathname === '/auth/login' || pathname === '/auth/register')
   ) {
-    return NextResponse.redirect(new URL('/home', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
