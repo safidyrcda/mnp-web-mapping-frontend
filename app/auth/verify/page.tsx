@@ -13,8 +13,10 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { confirmEmail } from '@/app/api/auth/auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005';
 
 function VerifyContent() {
   const router = useRouter();
@@ -32,24 +34,13 @@ function VerifyContent() {
       return;
     }
 
-    async function confirmEmail() {
+    async function confirm() {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/auth/confirm?token=${token}`,
-          { method: 'POST' },
-        );
+        if (token) {
+          const response = await confirmEmail(token);
 
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.message || 'Confirmation failed');
+          console.log('✅ Email confirmation response:', response);
         }
-
-        setSuccess(true);
-
-        setTimeout(() => {
-          router.push('/auth/login');
-        }, 2000);
       } catch (err: any) {
         setError(err.message || 'Une erreur est survenue');
       } finally {
@@ -57,7 +48,7 @@ function VerifyContent() {
       }
     }
 
-    confirmEmail();
+    confirm();
   }, [token, router]);
 
   return (

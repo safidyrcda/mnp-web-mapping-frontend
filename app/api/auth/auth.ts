@@ -1,3 +1,5 @@
+'use server';
+
 export interface ConfirmEmailData {
   token: string;
 }
@@ -9,10 +11,6 @@ export interface ResetPasswordData {
 
 export interface MessageResponse {
   message: string;
-}
-
-export interface LoginResponse {
-  access_token: string;
 }
 
 export interface AuthResponse {
@@ -31,57 +29,57 @@ export interface AuthResponse {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005';
 
-export async function register(data: {
+import { sendDataWithError } from '../post-data.service';
+
+interface User {
   email: string;
   password: string;
-}): Promise<AuthResponse> {
+}
+
+interface LoginResponse {
+  access_token?: string;
+  error?: string;
+}
+
+export const login = async (data: User): Promise<LoginResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    const result = await sendDataWithError('auth/login', data);
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || 'Registration failed');
+    if (!result) {
+      return { error: 'Réponse invalide du serveur.' };
     }
 
+    return result;
+  } catch (err) {
     return {
-      success: true,
-      message:
-        result.message || 'Registration successful. Please verify your email.',
+      error:
+        err instanceof Error
+          ? err.message
+          : 'Une erreur inconnue est survenue.',
     };
+  }
+};
+
+export async function register(data: { email: string; password: string }) {
+  try {
+    const response = await sendDataWithError('auth/register', data);
+
+    return response;
   } catch (error) {
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'Registration failed',
-    };
+    console.log('💥 Erreur dans register:', error);
+    throw new Error('Registration failed');
   }
 }
 
-export async function confirmEmail(token: string): Promise<AuthResponse> {
+export async function confirmEmail(token: string) {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/auth/confirm?token=${token}`,
-      {
-        method: 'POST',
-      },
-    );
+    const response = await sendDataWithError(`auth/confirm/token/${token}`, {
+      method: 'POST',
+    });
 
-    const result = await response.json();
+    console.log('✅ Email confirmation response:', response);
 
-    if (!response.ok) {
-      throw new Error(result.message || 'Email confirmation failed');
-    }
-
-    return {
-      success: true,
-      message: result.message || 'Email confirmed successfully',
-    };
+    return response;
   } catch (error) {
     return {
       success: false,

@@ -17,6 +17,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { register } from '@/app/api/auth/auth';
+import { set } from 'ol/transform';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -55,9 +56,11 @@ export default function RegisterPage() {
 
         password: formData.password,
       });
+
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue');
+      console.log('💥 Erreur dans handleSubmit:', err);
+      setError("L'email est déjà utilisé ou une erreur est survenue");
     } finally {
       setIsLoading(false);
     }
