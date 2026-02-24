@@ -1,14 +1,11 @@
-// lib/jwt.ts - VERSION CORRIGÉE
-'use server'; // Si vous voulez garder 'use server', toutes les fonctions doivent être async
-
+'use server';
 export interface DecodedToken {
-  sub: string; // Subject (user ID)
+  sub: string;
   email: string;
   role: string;
-  iat: number; // Issued at
-  exp: number; // Expiration
+  iat: number;
+  exp: number;
 
-  // Vos champs personnalisés
   id?: string;
   center?: {
     id?: string;
@@ -17,7 +14,6 @@ export interface DecodedToken {
   };
 }
 
-// ✅ Cette fonction EST async
 export const decodeJWT = async (token: string): Promise<DecodedToken> => {
   try {
     const base64Url = token.split('.')[1];
@@ -38,7 +34,6 @@ export const decodeJWT = async (token: string): Promise<DecodedToken> => {
   }
 };
 
-// ✅ CORRECTION : Ajoutez 'async' ici aussi !
 export const extractUserFromToken = async (decoded: DecodedToken) => {
   return {
     id: decoded.sub || decoded.id || '',

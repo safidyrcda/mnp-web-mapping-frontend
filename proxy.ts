@@ -7,6 +7,7 @@ export function proxy(request: NextRequest) {
     '/auth/login',
     '/auth/register',
     '/auth/verify',
+    '/auth/forgot-password',
     '/auth/reset-password',
     '/api/auth/session',
   ];
