@@ -79,7 +79,8 @@ export default function ForgotPasswordPage() {
             Mot de passe oublié
           </CardTitle>
           <CardDescription className="text-center">
-            Entrez votre email pour recevoir un code de réinitialisation
+            Entrez votre email pour recevoir un lien de réinitialisation de mot
+            de passe.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -117,7 +118,7 @@ export default function ForgotPasswordPage() {
                   Envoi...
                 </>
               ) : (
-                'Envoyer le code'
+                'Envoyer le lien de réinitialisation'
               )}
             </Button>
 

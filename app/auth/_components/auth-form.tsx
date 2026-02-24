@@ -134,7 +134,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -160,6 +160,15 @@ export function AuthForm({ mode }: AuthFormProps) {
               Retour
             </Button>
           </Link>
+          <div className="mt-2 text-sm text-center text-muted-foreground">
+            Mot de passe oublié?{' '}
+            <Link
+              href="/auth/forgot-password"
+              className="text-amber-600 hover:text-amber-700 font-medium"
+            >
+              Réinitialiser le mot de passe
+            </Link>
+          </div>
         </form>
       </CardContent>
     </Card>
