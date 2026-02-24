@@ -61,21 +61,21 @@ export function AuthForm({ mode }: AuthFormProps) {
         body: JSON.stringify({ user: decoded }),
       });
 
-      console.log('Session API response:', res);
-
       if (!res.ok) {
         toast.error('Failed to set session');
         return;
       }
 
-      toast.success('Connexion réussie');
-      router.push('/');
+      if (res.ok) {
+        toast.success('Connexion réussie');
+        router.replace('/');
+        router.refresh();
+      }
     } catch (error) {
       toast.error('Erreur de connexion');
       console.error(error);
     } finally {
       setLoading(false);
-      router.push('/');
     }
   };
 

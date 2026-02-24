@@ -8,7 +8,7 @@ export default function Header() {
           <div className="flex items-center gap-4">
             <div className="bg-gradient-to-br from-amber-600 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg">
               <span className="text-3xl">
-                <Image src="/logo.jpg" alt="Logo" width={50} height={100} />
+                <img src="/logo.jpg" alt="Logo" width={50} height={100} />
               </span>
             </div>
             <div className="flex flex-col">

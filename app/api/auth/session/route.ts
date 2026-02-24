@@ -4,11 +4,9 @@ import { cookies } from 'next/headers';
 export async function POST(req: Request) {
   const { user } = await req.json();
 
-  console.log('Setting session cookie for user:', user);
-
   (await cookies()).set('session', JSON.stringify(user), {
     httpOnly: true,
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
   });
