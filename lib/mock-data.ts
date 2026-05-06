@@ -84,23 +84,20 @@ export const mockFundings: Funding[] = [
   {
     id: '770e8400-e29b-41d4-a716-446655440000',
     name: 'Financement GEF REDD+',
-    funderId: '550e8400-e29b-41d4-a716-446655440000',
+
     projectId: '660e8400-e29b-41d4-a716-446655440000',
-    protectedAreaId: '880e8400-e29b-41d4-a716-446655440000',
   },
   {
     id: '770e8400-e29b-41d4-a716-446655440001',
     name: 'Financement PNUD Biodiversité',
-    funderId: '550e8400-e29b-41d4-a716-446655440001',
+
     projectId: '660e8400-e29b-41d4-a716-446655440002',
-    protectedAreaId: '880e8400-e29b-41d4-a716-446655440001',
   },
   {
     id: '770e8400-e29b-41d4-a716-446655440002',
     name: 'Financement KfW Côtier',
-    funderId: '550e8400-e29b-41d4-a716-446655440002',
+
     projectId: '660e8400-e29b-41d4-a716-446655440001',
-    protectedAreaId: '880e8400-e29b-41d4-a716-446655440003',
   },
 ];
 
@@ -117,7 +114,7 @@ export async function getFunders(): Promise<Funder[]> {
 }
 
 export async function createFunder(
-  funder: Omit<Funder, 'id'>
+  funder: Omit<Funder, 'id'>,
 ): Promise<Funder> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -133,7 +130,7 @@ export async function createFunder(
 
 export async function updateFunder(
   id: string,
-  funder: Partial<Funder>
+  funder: Partial<Funder>,
 ): Promise<Funder> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -162,7 +159,7 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 export async function createProject(
-  project: Omit<Project, 'id'>
+  project: Omit<Project, 'id'>,
 ): Promise<Project> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -178,7 +175,7 @@ export async function createProject(
 
 export async function updateProject(
   id: string,
-  project: Partial<Project>
+  project: Partial<Project>,
 ): Promise<Project> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -207,7 +204,7 @@ export async function getFundings(): Promise<Funding[]> {
 }
 
 export async function createFunding(
-  funding: Omit<Funding, 'id'>
+  funding: Omit<Funding, 'id'>,
 ): Promise<Funding> {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -223,7 +220,7 @@ export async function createFunding(
 
 export async function updateFunding(
   id: string,
-  funding: Partial<Funding>
+  funding: Partial<Funding>,
 ): Promise<Funding> {
   return new Promise((resolve) => {
     setTimeout(() => {
