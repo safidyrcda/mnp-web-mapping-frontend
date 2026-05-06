@@ -28,48 +28,48 @@ interface FundingFormProps {
 export function FundingForm({
   initialData,
   funders,
-  projects,
+  protectedAreas,
   onSubmit,
   loading = false,
   selectedProtectedArea,
 }: FundingFormProps) {
-  const [fundingFunders, setFundingFunders] = useState<Funder[]>([]);
   const form = useForm<Funding>({
     resolver: zodResolver(fundingSchema),
     defaultValues: {
-      projectId: initialData?.projectId ?? undefined,
       name: initialData?.name ?? '',
       debut: initialData?.debut,
       end: initialData?.end,
       currency: initialData?.currency,
       amount: initialData?.amount,
+      funders: [],
+      protectedAreaIds:
+        initialData?.protectedAreaIds ??
+        (selectedProtectedArea ? [selectedProtectedArea] : []),
     },
   });
 
-  const fetchFunders = async () => {
-    if (initialData && initialData.id) {
-      const res = await fetchFundersByFunding(initialData?.id);
-
-      setFundingFunders(res);
-
+  useEffect(() => {
+    if (initialData?.id) {
+      fetchFundersByFunding(initialData.id).then((res: Funder[]) => {
+        form.setValue(
+          'funders',
+          res.map((f) => f.id || ''),
+        );
+      });
+    }
+    // Reset protectedAreaIds when selectedProtectedArea changes (create mode)
+    if (!initialData) {
       form.setValue(
-        'funders',
-        res.map((f: Funder) => f.id || ''),
+        'protectedAreaIds',
+        selectedProtectedArea ? [selectedProtectedArea] : [],
       );
     }
-  };
-
-  useEffect(() => {
-    fetchFunders();
-  }, [initialData]);
+  }, [initialData, selectedProtectedArea]);
 
   const handleSubmit = async (data: Funding) => {
-    if (data.projectId === 'empty') data.projectId = null;
-
     await onSubmit({
       ...data,
       id: initialData?.id,
-      protectedAreaId: selectedProtectedArea,
     });
   };
 
@@ -90,24 +90,22 @@ export function FundingForm({
         control={form.control}
         name="amount"
         label="Montant"
-        placeholder=""
+        type="number"
+        placeholder="ex. 500000"
       />
       <FormInput
         control={form.control}
         name="currency"
-        label=" Devise"
-        placeholder="Ar"
+        label="Devise"
+        placeholder="ex. EUR"
       />
-
       <FormInput
         control={form.control}
         name="debut"
         type="date"
-        label="Debut"
+        label="Début"
       />
-
       <FormInput control={form.control} name="end" type="date" label="Fin" />
-
       <FormMultiSelect
         control={form.control}
         name="funders"
@@ -119,20 +117,17 @@ export function FundingForm({
           label: f.name,
         }))}
       />
-
-      {/* <FormSelect
+      <FormMultiSelect
         control={form.control}
-        name="projectId"
-        label="Projet (optionnel)"
-        placeholder="Sélectionner un projet ou laisser vide"
-        options={[
-          { value: 'empty', label: 'Aucun projet' },
-          ...projects.map((p) => ({
-            value: p.id!,
-            label: p.name,
-          })),
-        ]}
-      /> */}
+        name="protectedAreaIds"
+        label="Aires protégées"
+        placeholder="Sélectionner une ou plusieurs aires protégées"
+        description="Aires protégées concernées par ce financement"
+        options={protectedAreas.map((pa) => ({
+          value: pa.id || '',
+          label: `${pa.sigle} – ${pa.name}`,
+        }))}
+      />
     </FormWrapper>
   );
 }

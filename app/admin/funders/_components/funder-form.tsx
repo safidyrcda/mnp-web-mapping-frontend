@@ -26,10 +26,7 @@ export function FunderForm({
   });
 
   const handleSubmit = async (data: Funder) => {
-    await onSubmit({
-      ...data,
-      id: initialData?.id,
-    });
+    await onSubmit({ ...data, id: initialData?.id });
   };
 
   return (

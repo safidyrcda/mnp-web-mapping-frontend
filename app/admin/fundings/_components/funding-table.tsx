@@ -2,8 +2,9 @@
 
 import { Funding, Funder, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { GetFundingsDTO } from '@/app/api/manage-data';
+import { useRouter } from 'next/navigation';
 
 interface FundingTableProps {
   fundings: GetFundingsDTO;
@@ -19,46 +20,43 @@ export function FundingTable({
   onEdit,
   onDelete,
 }: FundingTableProps) {
-  const formatMonthYear = (date?: Date) => {
+  const formatMonthYear = (date?: Date | string) => {
     if (!date) return '-';
-    const d = new Date(date);
-
-    return d.toLocaleDateString('fr-FR', {
+    return new Date(date).toLocaleDateString('fr-FR', {
       month: 'long',
       year: 'numeric',
     });
   };
+
+  const router = useRouter();
 
   const formatAmount = (
     amount?: number | string,
     currency?: string,
   ): string => {
     if (amount === null || amount === undefined) return '-';
-
     const value = typeof amount === 'string' ? parseFloat(amount) : amount;
-
     if (isNaN(value)) return '-';
-
     const formatted = new Intl.NumberFormat('fr-FR', {
       maximumFractionDigits: 0,
     }).format(value);
-
     return currency ? `${formatted} ${currency}` : formatted;
   };
+
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <table className="w-full">
         <thead>
           <tr className="border-b border-border bg-muted/50">
+            <th className="px-6 py-3 text-left text-sm font-semibold">Nom</th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
-              Bailleur
+              Bailleur(s)
             </th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
-              Date de debut
+              Aires protégées
             </th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">
-              Date de fin
-            </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">Début</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold">Fin</th>
             <th className="px-6 py-3 text-left text-sm font-semibold">
               Montant
             </th>
@@ -73,23 +71,31 @@ export function FundingTable({
               key={funding.id}
               className="border-b border-border hover:bg-muted/30 transition-colors"
             >
-              <td className="px-6 py-3 text-sm text-muted-foreground">
-                {funding.funderFundings.map((f) => {
-                  return (
-                    <span key={f.id}>
-                      {f.funder.name} <br></br>
-                    </span>
-                  );
-                })}
+              <td className="px-6 py-3 text-sm font-medium">
+                {funding.name || '-'}
               </td>
-              <td className="px-6 py-3 text-left text-sm font-semibold">
+              <td className="px-6 py-3 text-sm text-muted-foreground">
+                {funding.funderFundings?.map((f) => (
+                  <span key={f.id} className="block">
+                    {f.funder?.name}
+                  </span>
+                )) ?? '-'}
+              </td>
+              <td className="px-6 py-3 text-sm text-muted-foreground">
+                {funding.protectedAreaFundings?.map((paf) => (
+                  <span key={paf.id} className="block">
+                    {paf.protectedArea?.sigle ?? paf.protectedArea?.name}
+                  </span>
+                )) ?? '-'}
+              </td>
+              <td className="px-6 py-3 text-sm">
                 {formatMonthYear(funding.debut)}
               </td>
-              <td className="px-6 py-3 text-left text-sm font-semibold">
+              <td className="px-6 py-3 text-sm">
                 {formatMonthYear(funding.end)}
               </td>
-              <td className="px-6 py-3 text-left text-sm font-semibold">
-                {formatAmount(funding.amount)} {funding.currency}
+              <td className="px-6 py-3 text-sm">
+                {formatAmount(funding.amount, funding.currency)}
               </td>
               <td className="px-6 py-3">
                 <div className="flex justify-end gap-2">
@@ -105,6 +111,14 @@ export function FundingTable({
                         debut: funding.debut,
                         end: funding.end,
                         projectId: funding.project?.id,
+                        protectedAreaIds:
+                          funding.protectedAreaFundings?.map(
+                            (paf) => paf.protectedArea?.id ?? '',
+                          ) ?? [],
+                        funders:
+                          funding.funderFundings?.map(
+                            (ff) => ff.funder?.id ?? '',
+                          ) ?? [],
                       })
                     }
                     className="w-9 h-9 p-0"
@@ -118,13 +132,20 @@ export function FundingTable({
                       onDelete({
                         id: funding.id,
                         name: funding.name,
-
                         projectId: funding.project?.id,
                       })
                     }
                     className="w-9 h-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => router.push(`/admin/fundings/${funding.id}`)}
+                    className="w-9 h-9 p-0"
+                  >
+                    <Eye className="w-4 h-4" />
                   </Button>
                 </div>
               </td>

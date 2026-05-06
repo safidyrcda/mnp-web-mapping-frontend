@@ -1,208 +1,106 @@
-import { useEffect, useState } from 'react';
-import {
-  fetchApFunders,
-  fetchApFundings,
-} from '@/app/api/fundings/get-fundings-by-ap.api';
-import { Funder, ProtectedArea } from '@/lib/schemas';
+'use client';
 
-type Props = {
+import { X, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+interface FeaturePopupProps {
   feature: any;
-  coordinate: number[];
+  coordinate?: any;
   onClose: () => void;
-};
+  children?: React.ReactNode;
+}
 
-export default function FeaturePopup({ feature, onClose }: Props) {
-  const props: ProtectedArea = feature.getProperties();
-  const [fundings, setFundings] = useState<any[]>([]);
-
-  const fetchDetails = async () => {
-    const id = props.id;
-
-    if (!id) return;
-    const res: Partial<Funder>[] = await fetchApFunders(id);
-
-    setFundings(res);
-  };
-
-  const getStatusName = (status: string) => {
-    switch (status) {
-      case 'PN':
-        return 'Parc national';
-
-      case 'RS':
-        return 'Réserve spéciale';
-
-      default:
-        return 'Réserve naturelle intégrale';
-    }
-  };
-
-  useEffect(() => {
-    fetchDetails();
-  }, [props.id]);
-
-  console.log(props);
+export default function FeaturePopup({
+  feature,
+  coordinate,
+  onClose,
+  children,
+}: FeaturePopupProps) {
+  const router = useRouter();
+  const properties = feature.getProperties();
 
   return (
     <div
       style={{
-        position: 'absolute',
-        transform: 'translate(-30%, -10%)',
         background: 'white',
-        borderRadius: '12px',
-        minWidth: '280px',
-        maxWidth: '280px',
-        boxShadow:
-          '0 20px 50px rgba(211, 136, 0, 0.25), 0 0 1px rgba(0,0,0,0.1)',
-        pointerEvents: 'auto',
-        border: '1px solid rgba(211, 136, 0, 0.1)',
-        paddingBottom: '4px',
+        padding: '16px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        minWidth: '250px',
+        maxWidth: '300px',
       }}
     >
-      {/* Header with gradient */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #d38800 0%, #f0b600 100%)',
-          padding: '16px',
-          color: 'white',
-          position: 'relative',
-          borderRadius: '12px 12px 0px 0px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '12px',
         }}
       >
+        <div>
+          <h3
+            style={{
+              margin: '0 0 4px 0',
+              fontSize: '16px',
+              fontWeight: 600,
+              color: '#333',
+            }}
+          >
+            {properties.name || 'Sans nom'}
+          </h3>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '12px',
+              color: '#666',
+            }}
+          >
+            Type: <strong>{properties.status || 'N/A'}</strong>
+          </p>
+        </div>
         <button
           onClick={onClose}
           style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
+            background: 'none',
             border: 'none',
-            background: 'rgba(255, 255, 255, 0.2)',
             cursor: 'pointer',
-            fontSize: '18px',
-            color: 'white',
-            width: '28px',
-            height: '28px',
-            borderRadius: '50%',
+            padding: '4px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'background 0.2s',
+            color: '#999',
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')
-          }
         >
-          ✕
+          <X size={18} />
         </button>
-        <h3 style={{ margin: 0, fontWeight: 700, fontSize: '14px' }}>
-          {props.name}
-        </h3>
       </div>
 
-      {/* Content */}
-      <div
+      {children}
+
+      <button
+        onClick={() => {
+          const id = properties.id || '1';
+          router.push(`/areas/${id}`);
+        }}
         style={{
-          padding: '16px',
-          maxHeight: '300px',
-          overflowY: 'scroll',
-          marginRight: '2.5px',
+          width: '100%',
+          marginTop: '12px',
+          padding: '10px',
+          background: '#27ae60',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
         }}
       >
-        <div
-          style={{
-            borderTop: '1px solid #f0e6d2',
-            paddingTop: '12px',
-            marginBottom: 4,
-          }}
-        >
-          <p
-            style={{
-              margin: '0 0 10px 0',
-              fontSize: '12px',
-              color: '#888',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            Détails
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {props.status && (
-              <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>
-                <span style={{ fontWeight: 600 }}>Statut:</span>{' '}
-                {getStatusName(props.status)}
-              </p>
-            )}
-            {props.size && (
-              <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>
-                <span style={{ fontWeight: 600 }}>Surface:</span>{' '}
-                {props.size.toFixed(3)}ha
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Funding Partners */}
-        {fundings.length > 0 && (
-          <div style={{ borderTop: '1px solid #f0e6d2', paddingTop: '12px' }}>
-            <p
-              style={{
-                margin: '0 0 10px 0',
-                fontSize: '12px',
-                color: '#888',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Partenaires de financement({fundings.length})
-            </p>
-            <div
-              style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-            >
-              {fundings.map((e) => (
-                <div
-                  key={e.id}
-                  style={{
-                    background: '#fef6e8',
-                    border: '1px solid #f0d699',
-                    borderRadius: '8px',
-                    padding: '8px 10px',
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: '0 0 2px 0',
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      color: '#d38800',
-                    }}
-                  >
-                    {e.name}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {fundings.length === 0 && (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '12px 0',
-              color: '#aaa',
-              fontSize: '12px',
-            }}
-          >
-            Loading funding information...
-          </div>
-        )}
-      </div>
+        Tracer une zone <ArrowRight size={16} />
+      </button>
     </div>
   );
 }

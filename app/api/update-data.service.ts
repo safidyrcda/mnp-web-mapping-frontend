@@ -4,7 +4,7 @@ interface ApiOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
-const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005/';
+const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000/';
 
 export const updateData = async <T>(
   path: string,

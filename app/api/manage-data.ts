@@ -6,114 +6,134 @@ import {
   Funding,
   ProtectedArea,
   FunderFunding,
+  Activity,
+  Disbursement,
 } from '@/lib/schemas';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-if (!BASE_URL) {
-  throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined');
-}
+if (!BASE_URL) throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined');
 
 async function apiFetch<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T> {
   const response = await fetch(`${BASE_URL}/${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     cache: 'no-store',
     ...options,
   });
-
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
-  }
-
+  if (!response.ok) throw new Error(`API Error: ${response.status}`);
+  // 204 No Content
+  if (response.status === 204) return undefined as T;
   return response.json();
 }
 
-//
 // FUNDERS
-//
 export const getFunders = async () => apiFetch<Funder[]>('funders');
-
 export const createFunder = async (data: Omit<Funder, 'id'>) =>
-  apiFetch<Funder>('funders', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-
+  apiFetch<Funder>('funders', { method: 'POST', body: JSON.stringify(data) });
 export const updateFunder = async (id: string, data: Partial<Funder>) =>
   apiFetch<Funder>(`funders/${id}`, {
-    method: 'PUT',
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
-
 export const deleteFunder = async (id: string) =>
-  apiFetch<void>(`funders/${id}`, {
-    method: 'DELETE',
-  });
+  apiFetch<void>(`funders/${id}`, { method: 'DELETE' });
 
-//
 // PROJECTS
-//
 export const getProjects = async () => apiFetch<Project[]>('projects');
-
 export const createProject = async (data: Omit<Project, 'id'>) =>
-  apiFetch<Project>('projects', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-
+  apiFetch<Project>('projects', { method: 'POST', body: JSON.stringify(data) });
 export const updateProject = async (id: string, data: Partial<Project>) =>
   apiFetch<Project>(`projects/${id}`, {
-    method: 'PUT',
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
-
 export const deleteProject = async (id: string) =>
-  apiFetch<void>(`projects/${id}`, {
-    method: 'DELETE',
-  });
+  apiFetch<void>(`projects/${id}`, { method: 'DELETE' });
 
-//
 // FUNDINGS
-//
-
-export type GetFundingsDTO = {
+export type FundingItem = {
   id: string;
-  protectedArea: { id: string };
-  funder: { id: string };
-  project?: Project;
-  name: string;
+  name?: string;
   debut?: Date;
   end?: Date;
   amount?: number;
   currency?: string;
+  project?: Project;
   funderFundings: FunderFunding[];
-}[];
+  protectedAreaFundings: { id: string; protectedArea: ProtectedArea }[];
+  disbursements?: Disbursement[];
+  activityFundings?: { id: string; activity: Activity }[];
+};
+export type GetFundingsDTO = FundingItem[];
+
 export const getFundings = async () => apiFetch<GetFundingsDTO>('fundings');
-
 export const createFunding = async (data: Partial<Funding>) =>
-  apiFetch<Funding>('fundings', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-
+  apiFetch<Funding>('fundings', { method: 'POST', body: JSON.stringify(data) });
 export const updateFunding = async (id: string, data: Partial<Funding>) =>
   apiFetch<Funding>(`fundings/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
-
 export const deleteFunding = async (id: string) =>
-  apiFetch<void>(`fundings/${id}`, {
-    method: 'DELETE',
-  });
+  apiFetch<void>(`fundings/${id}`, { method: 'DELETE' });
 
-//
 // PROTECTED AREAS
-//
 export const getProtectedAreas = async () =>
   apiFetch<ProtectedArea[]>('protected-areas');
+
+// ACTIVITIES
+export const getActivitiesByFunding = async (fundingId: string) =>
+  apiFetch<Activity[]>(`fundings/${fundingId}/activities`);
+export const getAllActivities = async () => apiFetch<Activity[]>('activities');
+export const createActivity = async (data: Omit<Activity, 'id'>) =>
+  apiFetch<Activity>('activities', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+export const createAndLinkActivity = async (
+  fundingId: string,
+  data: Omit<Activity, 'id'>,
+) =>
+  apiFetch<Activity>(`fundings/${fundingId}/activities`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+export const linkActivity = async (fundingId: string, activityId: string) =>
+  apiFetch<void>(`fundings/${fundingId}/activities/${activityId}/link`, {
+    method: 'POST',
+  });
+export const unlinkActivity = async (fundingId: string, activityId: string) =>
+  apiFetch<void>(`fundings/${fundingId}/activities/${activityId}/link`, {
+    method: 'DELETE',
+  });
+export const updateActivity = async (id: string, data: Partial<Activity>) =>
+  apiFetch<Activity>(`activities/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+export const deleteActivity = async (id: string) =>
+  apiFetch<void>(`activities/${id}`, { method: 'DELETE' });
+
+// DISBURSEMENTS
+export const getDisbursementsByFunding = async (fundingId: string) =>
+  apiFetch<Disbursement[]>(`fundings/${fundingId}/disbursements`);
+export const createDisbursement = async (
+  fundingId: string,
+  data: Omit<Disbursement, 'id' | 'fundingId'>,
+) =>
+  apiFetch<Disbursement>(`fundings/${fundingId}/disbursements`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+export const updateDisbursement = async (
+  id: string,
+  data: Partial<Disbursement>,
+) =>
+  apiFetch<Disbursement>(`disbursements/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+export const deleteDisbursement = async (id: string) =>
+  apiFetch<void>(`disbursements/${id}`, { method: 'DELETE' });

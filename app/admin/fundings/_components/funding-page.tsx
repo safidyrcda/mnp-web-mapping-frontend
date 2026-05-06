@@ -63,7 +63,11 @@ export function FundingPage() {
   };
 
   const filteredFundings = selectedProtectedAreaFilter
-    ? fundings.filter((f) => f.protectedArea.id === selectedProtectedAreaFilter)
+    ? fundings.filter((f) =>
+        f.protectedAreaFundings?.some(
+          (paf) => paf.protectedArea?.id === selectedProtectedAreaFilter,
+        ),
+      )
     : fundings;
 
   const handleCreateClick = () => {
@@ -73,7 +77,6 @@ export function FundingPage() {
 
   const handleEditClick = (funding: Funding) => {
     setSelectedFunding(funding);
-
     setIsFormOpen(true);
   };
 
@@ -108,6 +111,7 @@ export function FundingPage() {
       setIsLoading(true);
       await deleteFunding(selectedFunding.id);
       toast.success('Financement supprimé avec succès');
+      setIsDeleteOpen(false);
       await loadData();
     } catch (error) {
       toast.error('Erreur lors de la suppression');

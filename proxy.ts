@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
     '/api/auth/session',
   ];
 
-  const protectedRoutes = ['/', '/admin'];
+  const protectedRoutes = ['/admin'];
 
   const session = request.cookies.get('session');
 
