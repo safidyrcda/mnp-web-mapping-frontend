@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Users, FolderOpen, Banknote } from 'lucide-react';
+import { Users, FolderOpen, Banknote, AlignStartVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function AdminSidebar() {
@@ -10,9 +10,9 @@ export function AdminSidebar() {
 
   const links = [
     {
-      href: '/admin/funders',
-      icon: Users,
-      label: 'Bailleurs',
+      href: '/admin/activities',
+      icon: AlignStartVertical,
+      label: 'Activités',
     },
     // {
     //   href: '/admin/projects',

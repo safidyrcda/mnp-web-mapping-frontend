@@ -86,12 +86,7 @@ export const getProtectedAreas = async () =>
 // ACTIVITIES
 export const getActivitiesByFunding = async (fundingId: string) =>
   apiFetch<Activity[]>(`fundings/${fundingId}/activities`);
-export const getAllActivities = async () => apiFetch<Activity[]>('activities');
-export const createActivity = async (data: Omit<Activity, 'id'>) =>
-  apiFetch<Activity>('activities', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
+
 export const createAndLinkActivity = async (
   fundingId: string,
   data: Omit<Activity, 'id'>,
@@ -108,13 +103,6 @@ export const unlinkActivity = async (fundingId: string, activityId: string) =>
   apiFetch<void>(`fundings/${fundingId}/activities/${activityId}/link`, {
     method: 'DELETE',
   });
-export const updateActivity = async (id: string, data: Partial<Activity>) =>
-  apiFetch<Activity>(`activities/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
-export const deleteActivity = async (id: string) =>
-  apiFetch<void>(`activities/${id}`, { method: 'DELETE' });
 
 // DISBURSEMENTS
 export const getDisbursementsByFunding = async (fundingId: string) =>
@@ -165,3 +153,36 @@ export type ProtectedAreaDetail = {
 
 export const getProtectedAreaDetail = async (id: string) =>
   apiFetch<ProtectedAreaDetail>(`protected-areas/${id}/detail`);
+
+// Activités — ajouter/remplacer dans manage-data.ts
+export type ActivityWithFundings = Activity & {
+  fundings: { id: string; name?: string }[];
+};
+
+export const getAllActivities = async () => apiFetch<Activity[]>('activities');
+export const getActivitiesWithFundings = async (): Promise<
+  ActivityWithFundings[]
+> => {
+  const activities = await apiFetch<Activity[]>('activities');
+  const withFundings = await Promise.all(
+    activities.map(async (a) => {
+      const fundings = await apiFetch<{ id: string; name?: string }[]>(
+        `activities/${a.id}/fundings`,
+      );
+      return { ...a, fundings };
+    }),
+  );
+  return withFundings;
+};
+export const createActivity = async (data: Omit<Activity, 'id'>) =>
+  apiFetch<Activity>('activities', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+export const updateActivity = async (id: string, data: Partial<Activity>) =>
+  apiFetch<Activity>(`activities/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+export const deleteActivity = async (id: string) =>
+  apiFetch<void>(`activities/${id}`, { method: 'DELETE' });
