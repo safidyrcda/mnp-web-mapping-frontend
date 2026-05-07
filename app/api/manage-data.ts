@@ -137,3 +137,31 @@ export const updateDisbursement = async (
   });
 export const deleteDisbursement = async (id: string) =>
   apiFetch<void>(`disbursements/${id}`, { method: 'DELETE' });
+
+// Ajouter ces types et cette fonction
+
+export type FundingDetail = {
+  id: string;
+  name?: string;
+  debut?: string;
+  end?: string;
+  amount?: number;
+  currency?: string;
+  amountInEuro?: number;
+  totalDisbursed: number;
+  totalDisbursedEuro: number;
+  funders: { id: string; name: string; fullname?: string }[];
+  otherProtectedAreas: { id: string; sigle: string; name: string }[];
+};
+
+export type ProtectedAreaDetail = {
+  id: string;
+  sigle: string;
+  name: string;
+  status?: string;
+  size?: number;
+  fundings: FundingDetail[];
+};
+
+export const getProtectedAreaDetail = async (id: string) =>
+  apiFetch<ProtectedAreaDetail>(`protected-areas/${id}/detail`);

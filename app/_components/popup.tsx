@@ -80,7 +80,7 @@ export default function FeaturePopup({
       <button
         onClick={() => {
           const id = properties.id || '1';
-          router.push(`/areas/${id}`);
+          router.push(`/protected-area/${id}`);
         }}
         style={{
           width: '100%',
@@ -99,7 +99,7 @@ export default function FeaturePopup({
           gap: '6px',
         }}
       >
-        Tracer une zone <ArrowRight size={16} />
+        Details <ArrowRight size={16} />
       </button>
     </div>
   );
