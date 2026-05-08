@@ -11,13 +11,12 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 
 import GeoJSON from 'ol/format/GeoJSON';
-import Overlay from 'ol/Overlay';
 
 import { Fill, Stroke, Style } from 'ol/style';
 import Select from 'ol/interaction/Select';
 import { click } from 'ol/events/condition';
 import { fetchData, fetchOne } from '../../components/api';
-import FeaturePopup from '@/app/_components/popup';
+import FeaturePanel from './panel'; // ← renamed import
 import { Extent } from 'ol/extent';
 import TileArcGISRest from 'ol/source/TileArcGISRest';
 import { ProtectedArea } from '@/lib/schemas';
@@ -30,15 +29,13 @@ type Props = {
 export default function OpenLayersMap({ selectedArea }: Props) {
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
 
-  const popupRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
-  const overlayRef = useRef<Overlay | null>(null);
   const initialExtentRef = useRef<Extent | null>(null);
-
   const vectorLayerRef = useRef<VectorLayer<any> | null>(null);
   const vectorSourceRef = useRef<VectorSource | null>(null);
   const lastSelectedFeatureRef = useRef<any>(null);
   const selectInteractionRef = useRef<Select | null>(null);
+
   const typeColors: Record<string, string> = {
     PN: '#2ecc71',
     RS: '#014d23',
@@ -51,44 +48,30 @@ export default function OpenLayersMap({ selectedArea }: Props) {
   const getStyleByType = (feature: any) => {
     const type = feature.get('status');
     const color = typeColors[type] || '#95a5a6';
-
     const cache = styleCacheRef.current;
-
-    if (!cache[type]) {
-      cache[type] = new Style({
-        fill: new Fill({ color }),
-      });
-    }
-
+    if (!cache[type]) cache[type] = new Style({ fill: new Fill({ color }) });
     return cache[type];
   };
 
   const getSelectedStyleByType = (feature: any) => {
     const type = feature.get('status');
     const color = typeColors[type] || '#95a5a6';
-
     const cache = selectedStyleCacheRef.current;
-
     if (!cache[type]) {
       cache[type] = new Style({
         fill: new Fill({ color: color + '67' }),
-        stroke: new Stroke({
-          color,
-          width: 3,
-        }),
+        stroke: new Stroke({ color, width: 3 }),
       });
     }
-
     return cache[type];
   };
 
   const [isLoadingSelection, setIsLoadingSelection] = useState(false);
+
   const selectFeatureById = async (id: string) => {
     const map = mapRef.current;
     const source = vectorSourceRef.current;
-    const overlay = overlayRef.current;
-
-    if (!map || !source || !overlay) return;
+    if (!map || !source) return;
 
     setIsLoadingSelection(true);
 
@@ -112,20 +95,14 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
       feature.setProperties(fullFeature.properties);
       feature.setStyle(getSelectedStyleByType);
-
       lastSelectedFeatureRef.current = feature;
 
       const geometry = feature.getGeometry();
       if (!geometry) return;
 
       const extent = geometry.getExtent();
-      const coordinate = [
-        (extent[0] + extent[2]) / 2,
-        (extent[1] + extent[3]) / 2,
-      ];
 
       setSelectedFeature(feature);
-      overlay.setPosition(coordinate);
 
       await new Promise<void>((resolve) => {
         map.getView().fit(extent, {
@@ -133,7 +110,6 @@ export default function OpenLayersMap({ selectedArea }: Props) {
           duration: 600,
           maxZoom: 18,
         });
-
         map.once('moveend', () => resolve());
       });
     } finally {
@@ -142,10 +118,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
   };
 
   useEffect(() => {
-    console.log('Selected area changed:', selectedArea);
-    if (selectedArea?.id) {
-      selectFeatureById(selectedArea.id);
-    }
+    if (selectedArea?.id) selectFeatureById(selectedArea.id);
   }, [selectedArea]);
 
   useEffect(() => {
@@ -161,26 +134,12 @@ export default function OpenLayersMap({ selectedArea }: Props) {
             }),
           }),
         ],
-        view: new View({
-          center: [0, 0],
-          zoom: 2,
-        }),
+        view: new View({ center: [0, 0], zoom: 2 }),
       });
 
       mapRef.current = map;
 
-      const overlay = new Overlay({
-        element: popupRef.current!,
-        positioning: 'bottom-center',
-        stopEvent: true,
-        offset: [0, -12],
-      });
-
-      overlayRef.current = overlay;
-      map.addOverlay(overlay);
-
       const geojson = await fetchData();
-
       const features = new GeoJSON().readFeatures(geojson, {
         dataProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857',
@@ -200,10 +159,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
       const extent = vectorSource.getExtent();
       if (extent.every((c) => !isNaN(c))) {
         initialExtentRef.current = extent;
-        map.getView().fit(extent, {
-          padding: [60, 60, 60, 60],
-          duration: 800,
-        });
+        map.getView().fit(extent, { padding: [60, 60, 60, 60], duration: 800 });
       }
 
       const clickSelect = new Select({
@@ -213,22 +169,16 @@ export default function OpenLayersMap({ selectedArea }: Props) {
       });
 
       selectInteractionRef.current = clickSelect;
-
       map.addInteraction(clickSelect);
 
       clickSelect.on('select', (e) => {
         const feature = e.selected[0];
-
         if (!feature) {
           setSelectedFeature(null);
-          overlay.setPosition(undefined);
           return;
         }
-
         const id = feature.get('id');
-
         clickSelect.getFeatures().clear();
-
         selectFeatureById(id);
       });
 
@@ -240,35 +190,31 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     }
 
     initializeMap();
-
     return () => {
       if (map) map.setTarget(undefined);
     };
   }, []);
 
-  const onClosePopup = () => {
+  const onClosePanel = () => {
     if (lastSelectedFeatureRef.current) {
       lastSelectedFeatureRef.current.setStyle(undefined);
       lastSelectedFeatureRef.current = null;
     }
 
     setSelectedFeature(null);
-    overlayRef.current?.setPosition(undefined);
 
     const map = mapRef.current;
     const extent = initialExtentRef.current;
-
     if (map && extent) {
-      map.getView().fit(extent, {
-        padding: [60, 60, 60, 60],
-        duration: 500,
-        maxZoom: 12,
-      });
+      map
+        .getView()
+        .fit(extent, { padding: [60, 60, 60, 60], duration: 500, maxZoom: 12 });
     }
   };
 
   return (
     <div style={{ position: 'relative' }}>
+      {/* Loading overlay */}
       {isLoadingSelection && (
         <div
           style={{
@@ -277,7 +223,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 800,
             background: 'rgba(255,255,255,0.45)',
             backdropFilter: 'blur(4px)',
             WebkitBackdropFilter: 'blur(4px)',
@@ -289,10 +235,10 @@ export default function OpenLayersMap({ selectedArea }: Props) {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '12px',
+              gap: 12,
               padding: '24px 32px',
               background: 'white',
-              borderRadius: '16px',
+              borderRadius: 16,
               boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
             }}
           >
@@ -301,30 +247,20 @@ export default function OpenLayersMap({ selectedArea }: Props) {
               strokeWidth={2.5}
               className="animate-spin text-green-600"
             />
-            <span
-              style={{
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#444',
-              }}
-            >
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#444' }}>
               Chargement...
             </span>
           </div>
         </div>
       )}
 
+      {/* Map */}
       <div id="map" style={{ height: '650px', width: '100%' }} />
 
-      <div ref={popupRef}>
-        {selectedFeature && !isLoadingSelection && (
-          <FeaturePopup
-            feature={selectedFeature}
-            coordinate={selectedFeature.getGeometry()}
-            onClose={onClosePopup}
-          />
-        )}
-      </div>
+      {/* Side panel — rendered in a portal-like fixed position, no OL overlay needed */}
+      {selectedFeature && !isLoadingSelection && (
+        <FeaturePanel feature={selectedFeature} onClose={onClosePanel} />
+      )}
     </div>
   );
 }
