@@ -335,20 +335,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                   value={allFunders.length > 0 ? `${allFunders.length}` : '—'}
                   accent="#1565c0"
                 />
-                <MetricCard
-                  icon={<Banknote size={15} color="#6a1b9a" />}
-                  label="Total financé (€)"
-                  value={totalAmount ? (formatAmount(totalAmount) ?? '—') : '—'}
-                  accent="#6a1b9a"
-                />
-                <MetricCard
-                  icon={<Banknote size={15} color="#e65100" />}
-                  label="Décaissé (€)"
-                  value={
-                    totalDisbursed ? (formatAmount(totalDisbursed) ?? '—') : '—'
-                  }
-                  accent="#e65100"
-                />
+
                 {activeUntil && (
                   <MetricCard
                     icon={<Calendar size={15} color="#00695c" />}
