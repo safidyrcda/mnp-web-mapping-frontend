@@ -7,8 +7,36 @@ import {
   FundingDetail,
 } from '@/app/api/manage-data';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Leaf } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ─── Palette nature ──────────────────────────────────────────────────────────
+
+const colors = {
+  green: {
+    50: '#EAF3DE',
+    100: '#C0DD97',
+    200: '#97C459',
+    600: '#3B6D11',
+    800: '#27500A',
+    900: '#173404',
+  },
+  teal: {
+    50: '#E1F5EE',
+    100: '#9FE1CB',
+    200: '#5DCAA5',
+    600: '#0F6E56',
+    800: '#085041',
+    900: '#04342C',
+  },
+  amber: {
+    50: '#FAEEDA',
+    100: '#FAC775',
+    200: '#EF9F27',
+    600: '#854F0B',
+    800: '#633806',
+  },
+};
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -42,23 +70,62 @@ const duration = (debut?: string | null, end?: string | null) => {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
+type StatVariant = 'green' | 'teal' | 'amber';
+
+const statStyles: Record<
+  StatVariant,
+  { bg: string; label: string; value: string; sub: string }
+> = {
+  green: {
+    bg: colors.green[50],
+    label: colors.green[600],
+    value: colors.green[800],
+    sub: colors.green[600],
+  },
+  teal: {
+    bg: colors.teal[50],
+    label: colors.teal[600],
+    value: colors.teal[800],
+    sub: colors.teal[600],
+  },
+  amber: {
+    bg: colors.amber[50],
+    label: colors.amber[600],
+    value: colors.amber[800],
+    sub: colors.amber[600],
+  },
+};
+
 function StatCard({
   label,
   value,
   sub,
+  variant = 'green',
 }: {
   label: string;
   value: string;
   sub?: string;
+  variant?: StatVariant;
 }) {
+  const s = statStyles[variant];
   return (
-    <div className="rounded-xl bg-muted/60 px-4 py-3 space-y-0.5">
-      <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">
+    <div
+      style={{ backgroundColor: s.bg }}
+      className="rounded-xl px-4 py-3 space-y-0.5"
+    >
+      <p
+        className="text-[11px] uppercase tracking-widest font-medium"
+        style={{ color: s.label }}
+      >
         {label}
       </p>
-      <p className="text-xl font-semibold">{value}</p>
+      <p className="text-xl font-semibold" style={{ color: s.value }}>
+        {value}
+      </p>
       {sub && (
-        <p className="text-[11px] text-muted-foreground truncate">{sub}</p>
+        <p className="text-[11px] truncate" style={{ color: s.sub }}>
+          {sub}
+        </p>
       )}
     </div>
   );
@@ -68,52 +135,81 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
   const hasOtherAreas = funding.otherProtectedAreas.length > 0;
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{
+        border: `0.5px solid ${colors.green[100]}`,
+      }}
+    >
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 px-4 py-3.5">
+      <div
+        className="flex items-start justify-between gap-4 px-4 py-3.5"
+        style={{
+          backgroundColor: colors.green[50],
+          borderBottom: `0.5px solid ${colors.green[100]}`,
+        }}
+      >
         <div className="min-w-0">
-          <h3 className="font-medium text-sm leading-snug">
+          <h3
+            className="font-medium text-sm leading-snug"
+            style={{ color: colors.green[900] }}
+          >
             {funding.name || (
-              <span className="italic text-muted-foreground">Sans nom</span>
+              <span className="italic" style={{ color: colors.teal[600] }}>
+                Sans nom
+              </span>
             )}
           </h3>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs mt-1" style={{ color: colors.teal[600] }}>
             {fmtDate(funding.debut)} → {fmtDate(funding.end)}
             {' · '}
-            <span className="font-medium text-foreground">
+            <span className="font-medium" style={{ color: colors.green[800] }}>
               {duration(funding.debut, funding.end)}
             </span>
           </p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-base font-semibold">
+          <p
+            className="text-base font-semibold"
+            style={{ color: colors.green[800] }}
+          >
             {fmt(funding.amount, funding.currency)}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-[11px] mt-0.5" style={{ color: colors.teal[600] }}>
             montant total
           </p>
         </div>
       </div>
 
-      <div className="border-t border-border mx-0" />
-
       <div className="px-4 py-3.5 space-y-3">
         {/* Bailleurs */}
         {funding.funders.length > 0 && (
           <div>
-            <p className="text-[11px] uppercase tracking-widest font-medium text-muted-foreground mb-2">
+            <p
+              className="text-[11px] uppercase tracking-widest font-medium mb-2"
+              style={{ color: colors.teal[600] }}
+            >
               Bailleur{funding.funders.length > 1 ? 's' : ''}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {funding.funders.map((f) => (
                 <span
                   key={f.id}
-                  className="inline-flex items-center gap-1 border border-border bg-muted/50 px-2.5 py-1 rounded-full text-xs"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs"
+                  style={{
+                    border: `0.5px solid ${colors.teal[200]}`,
+                    backgroundColor: colors.teal[50],
+                  }}
                   title={f.fullname ?? undefined}
                 >
-                  <span className="font-medium">{f.name}</span>
+                  <span
+                    className="font-medium"
+                    style={{ color: colors.teal[800] }}
+                  >
+                    {f.name}
+                  </span>
                   {f.fullname && (
-                    <span className="text-muted-foreground">
+                    <span style={{ color: colors.teal[600] }}>
                       · {f.fullname}
                     </span>
                   )}
@@ -123,31 +219,20 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
           </div>
         )}
 
-        {/* Décaissements */}
-        <div className="grid grid-cols-2 gap-2">
-          {/* <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-            <p className="text-[11px] text-muted-foreground mb-1">
-              Montant décaissé
-            </p>
-            <p className="text-sm font-semibold">
-              {fmt(funding.totalDisbursed, funding.currency)}
-            </p>
-          </div>
-          <div className="rounded-lg bg-muted/50 px-3 py-2.5">
-            <p className="text-[11px] text-muted-foreground mb-1">
-              Décaissé (€)
-            </p>
-            <p className="text-sm font-semibold">
-              {fmt(funding.totalDisbursedEuro, '€')}
-            </p>
-          </div> */}
-        </div>
-
         {/* Avertissement multi-AP */}
         {hasOtherAreas && (
-          <div className="flex gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div className="text-xs text-amber-800 dark:text-amber-300">
+          <div
+            className="flex gap-2 rounded-lg p-3"
+            style={{
+              backgroundColor: colors.amber[50],
+              border: `0.5px solid ${colors.amber[200]}`,
+            }}
+          >
+            <AlertTriangle
+              className="w-4 h-4 shrink-0 mt-0.5"
+              style={{ color: colors.amber[800] }}
+            />
+            <div className="text-xs" style={{ color: colors.amber[800] }}>
               <p className="font-semibold mb-1.5">
                 Ce financement concerne plusieurs aires protégées — les montants
                 sont partagés.
@@ -156,7 +241,12 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
                 {funding.otherProtectedAreas.map((pa) => (
                   <span
                     key={pa.id}
-                    className="bg-amber-100 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full font-medium text-[11px]"
+                    className="px-2 py-0.5 rounded-full font-medium text-[11px]"
+                    style={{
+                      backgroundColor: colors.amber[100],
+                      border: `0.5px solid ${colors.amber[200]}`,
+                      color: colors.amber[800],
+                    }}
                   >
                     {pa.sigle} – {pa.name}
                   </span>
@@ -187,7 +277,9 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground text-sm">Chargement...</p>
+        <p className="text-sm" style={{ color: colors.teal[600] }}>
+          Chargement...
+        </p>
       </div>
     );
   }
@@ -195,7 +287,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
   if (!data) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground text-sm">
+        <p className="text-sm" style={{ color: colors.teal[600] }}>
           Aire protégée introuvable.
         </p>
       </div>
@@ -209,48 +301,77 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
   );
 
   const totalBudget = data.fundings.reduce((s, f) => s + (f.amount ?? 0), 0);
-  const totalDisbursedEuro = data.fundings.reduce(
-    (s, f) => s + f.totalDisbursedEuro,
-    0,
-  );
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 space-y-4">
       {/* Navigation */}
       <button
         onClick={() => router.back()}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm transition-colors"
+        style={{ color: colors.teal[600] }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = colors.teal[800])}
+        onMouseLeave={(e) => (e.currentTarget.style.color = colors.teal[600])}
       >
         <ArrowLeft className="w-4 h-4" />
         Retour
       </button>
 
       {/* Grand card principal */}
-      <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
-        {/* Hero / En-tête */}
-        <div className="bg-muted/40 border-b border-border px-6 py-5 flex items-start justify-between gap-4">
+      <div
+        className="rounded-2xl overflow-hidden shadow-sm"
+        style={{ border: `0.5px solid ${colors.green[100]}` }}
+      >
+        {/* Hero */}
+        <div
+          className="px-6 py-5 flex items-start justify-between gap-4"
+          style={{
+            background: `linear-gradient(135deg, ${colors.teal[800]} 0%, ${colors.green[800]} 100%)`,
+          }}
+        >
           <div className="space-y-1.5">
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-semibold tracking-tight">
+              <Leaf
+                className="w-5 h-5 opacity-70"
+                style={{ color: colors.green[100] }}
+              />
+              <span
+                className="text-2xl font-semibold tracking-tight"
+                style={{ color: colors.green[50] }}
+              >
                 {data.sigle}
               </span>
               {data.status && (
-                <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                <span
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-full"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    color: colors.green[100],
+                    border: '0.5px solid rgba(255,255,255,0.25)',
+                  }}
+                >
                   {data.status}
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{data.name}</p>
+            <p className="text-sm" style={{ color: colors.teal[100] }}>
+              {data.name}
+            </p>
           </div>
           {data.size && (
             <div className="text-right shrink-0">
-              <p className="text-xl font-semibold">
+              <p
+                className="text-xl font-semibold"
+                style={{ color: colors.green[50] }}
+              >
                 {new Intl.NumberFormat('fr-FR', {
                   maximumFractionDigits: 0,
                 }).format(data.size)}{' '}
                 ha
               </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p
+                className="text-[11px] mt-0.5"
+                style={{ color: colors.teal[100] }}
+              >
                 superficie
               </p>
             </div>
@@ -261,42 +382,50 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
         <div className="px-6 py-5 space-y-6">
           {/* Vue d'ensemble */}
           <div>
-            <p className="text-[11px] uppercase tracking-widest font-medium text-muted-foreground mb-3">
+            <p
+              className="text-[11px] uppercase tracking-widest font-medium mb-3"
+              style={{ color: colors.teal[600] }}
+            >
               {`Vue d'ensemble`}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               <StatCard
                 label="Financements"
                 value={String(data.fundings.length)}
+                variant="green"
               />
               <StatCard
                 label="Partenaires / Bailleurs"
                 value={String(allFunders.length)}
                 sub={allFunders.map((f) => f.name).join(', ')}
+                variant="teal"
               />
-              {/* <StatCard
-                label="Total budgété"
-                value={fmt(totalBudget)}
-                sub={data.fundings[0]?.currency ?? undefined}
-              />
-              <StatCard
-                label="Total décaissé (€)"
-                value={fmt(totalDisbursedEuro, '€')}
-              /> */}
             </div>
           </div>
 
           {/* Séparateur */}
-          <div className="border-t border-border" />
+          <div
+            className="border-t"
+            style={{ borderColor: colors.green[100] }}
+          />
 
           {/* Liste des financements */}
           <div>
-            <p className="text-[11px] uppercase tracking-widest font-medium text-muted-foreground mb-3">
+            <p
+              className="text-[11px] uppercase tracking-widest font-medium mb-3"
+              style={{ color: colors.teal[600] }}
+            >
               Financements ({data.fundings.length})
             </p>
 
             {data.fundings.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+              <div
+                className="rounded-xl border-dashed py-12 text-center text-sm"
+                style={{
+                  border: `0.5px dashed ${colors.green[100]}`,
+                  color: colors.teal[600],
+                }}
+              >
                 Aucun financement enregistré pour cette aire protégée.
               </div>
             ) : (
