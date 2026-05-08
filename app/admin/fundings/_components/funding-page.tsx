@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Funding, Funder, Project, ProtectedArea } from '@/lib/schemas';
+import {
+  Funding,
+  Funder,
+  Project,
+  ProtectedArea,
+  Disbursement,
+} from '@/lib/schemas';
 import {
   getFundings,
   createFunding,
@@ -10,15 +16,18 @@ import {
   getFunders,
   getProjects,
   getProtectedAreas,
+  createDisbursement,
   GetFundingsDTO,
 } from '@/app/api/manage-data';
 import { FundingForm } from './funding-form';
 import { FundingTable } from './funding-table';
 import { BaseModal } from '@/components/modals/base-modal';
 import { ConfirmModal } from '@/components/modals/confirm-modal';
+
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { DisbursementForm } from '../[id]/_components/disbursement-form';
 
 export function FundingPage() {
   const [fundings, setFundings] = useState<GetFundingsDTO>([]);
@@ -32,6 +41,12 @@ export function FundingPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // Disbursement modal state
+  const [isDisbursementOpen, setIsDisbursementOpen] = useState(false);
+  const [disbursementFundingId, setDisbursementFundingId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     loadData();
@@ -51,9 +66,7 @@ export function FundingPage() {
       setFunders(fundersData);
       setProjects(projectsData);
       setProtectedAreas(protectedAreasData);
-      if (protectedAreasData.length > 0) {
-        setSelectedProtectedAreaFilter(protectedAreasData[0].id!);
-      }
+      // No default selection — start with "all"
     } catch (error) {
       toast.error('Erreur lors du chargement des données');
       console.error(error);
@@ -85,6 +98,11 @@ export function FundingPage() {
     setIsDeleteOpen(true);
   };
 
+  const handleAddDisbursement = (fundingId: string) => {
+    setDisbursementFundingId(fundingId);
+    setIsDisbursementOpen(true);
+  };
+
   const handleFormSubmit = async (data: Partial<Funding>) => {
     try {
       setIsLoading(true);
@@ -96,6 +114,24 @@ export function FundingPage() {
         toast.success('Financement créé avec succès');
       }
       setIsFormOpen(false);
+      await loadData();
+    } catch (error) {
+      toast.error('Erreur lors de la sauvegarde');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDisbursementSubmit = async (
+    data: Omit<Disbursement, 'id' | 'fundingId'>,
+  ) => {
+    if (!disbursementFundingId) return;
+    try {
+      setIsLoading(true);
+      await createDisbursement(disbursementFundingId, data);
+      toast.success('Décaissement ajouté avec succès');
+      setIsDisbursementOpen(false);
       await loadData();
     } catch (error) {
       toast.error('Erreur lors de la sauvegarde');
@@ -146,6 +182,8 @@ export function FundingPage() {
           onChange={(e) => setSelectedProtectedAreaFilter(e.target.value)}
           className="mt-2 w-full md:w-64 px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
+          {/* ← Option "tous les financements" */}
+          <option value="">Tous les financements</option>
           {protectedAreas.map((pa) => (
             <option key={pa.id} value={pa.id}>
               {pa.sigle} - {pa.name}
@@ -161,8 +199,10 @@ export function FundingPage() {
         protectedAreas={protectedAreas}
         onEdit={handleEditClick}
         onDelete={handleDeleteClick}
+        onAddDisbursement={handleAddDisbursement}
       />
 
+      {/* Funding form modal */}
       <BaseModal
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
@@ -178,6 +218,18 @@ export function FundingPage() {
           onSubmit={handleFormSubmit}
           loading={isLoading}
           selectedProtectedArea={selectedProtectedAreaFilter}
+        />
+      </BaseModal>
+
+      {/* Disbursement modal */}
+      <BaseModal
+        open={isDisbursementOpen}
+        onOpenChange={setIsDisbursementOpen}
+        title="Ajouter un décaissement"
+      >
+        <DisbursementForm
+          onSubmit={handleDisbursementSubmit}
+          loading={isLoading}
         />
       </BaseModal>
 
