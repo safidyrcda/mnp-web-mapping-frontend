@@ -62,62 +62,54 @@ export function FundingTable({
       : { bg: '#f8fafc', text: '#475569', border: '#e2e8f0' };
   }
 
+  // Palette de couleurs pour les activités — cycle automatique par index
+  const ACTIVITY_PALETTE = [
+    { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
+    { bg: '#fdf4ff', text: '#7e22ce', border: '#e9d5ff' },
+    { bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' },
+    { bg: '#f0fdfa', text: '#0f766e', border: '#99f6e4' },
+    { bg: '#fef9c3', text: '#854d0e', border: '#fde68a' },
+    { bg: '#fdf2f8', text: '#9d174d', border: '#fbcfe8' },
+  ];
+
+  function activityColor(index: number) {
+    return ACTIVITY_PALETTE[index % ACTIVITY_PALETTE.length];
+  }
+
   function ActivityPills({
     activities,
   }: {
     activities: { id?: string; activity: { id?: string; title?: string } }[];
   }) {
-    const MAX_VISIBLE = 2;
-    const visible = activities.slice(0, MAX_VISIBLE);
-    const hidden = activities.slice(MAX_VISIBLE);
-
     if (activities.length === 0)
       return <span className="text-muted-foreground text-sm">—</span>;
 
     return (
-      <div className="flex items-center gap-1 flex-wrap">
-        {visible.map((af, i) => (
-          <span
-            key={af.id ?? i}
-            title={af.activity?.title}
-            style={{
-              background: '#f0f9ff',
-              color: '#0369a1',
-              border: '1px solid #bae6fd',
-              fontSize: 11,
-              fontWeight: 700,
-              padding: '2px 7px',
-              borderRadius: 99,
-              letterSpacing: '0.04em',
-              cursor: 'default',
-              whiteSpace: 'nowrap',
-              maxWidth: 140,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: 'inline-block',
-            }}
-          >
-            {af.activity?.title ?? '?'}
-          </span>
-        ))}
-        {hidden.length > 0 && (
-          <span
-            title={hidden.map((h) => h.activity?.title).join(', ')}
-            style={{
-              background: '#f1f5f9',
-              color: '#64748b',
-              border: '1px solid #e2e8f0',
-              fontSize: 11,
-              fontWeight: 700,
-              padding: '2px 7px',
-              borderRadius: 99,
-              cursor: 'default',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            +{hidden.length}
-          </span>
-        )}
+      <div className="flex flex-col gap-1">
+        {activities.map((af, i) => {
+          const c = activityColor(i);
+          return (
+            <span
+              key={af.id ?? i}
+              title={af.activity?.title}
+              style={{
+                background: c.bg,
+                color: c.text,
+                border: `1px solid ${c.border}`,
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: 6,
+                letterSpacing: '0.02em',
+                cursor: 'default',
+                display: 'block',
+                lineHeight: '1.5',
+              }}
+            >
+              {af.activity?.title ?? '?'}
+            </span>
+          );
+        })}
       </div>
     );
   }
@@ -189,199 +181,351 @@ export function FundingTable({
     );
   }
 
+  // Alternating row colors
+  const ROW_COLORS = ['bg-white', 'bg-slate-50/60'];
+
   return (
-    /* Conteneur avec scroll horizontal + vertical et hauteur fixe */
     <div
-      className="rounded-lg border border-border overflow-auto"
+      className="rounded-xl border border-border overflow-auto shadow-sm"
       style={{ maxHeight: '70vh' }}
     >
-      <table className="w-full" style={{ minWidth: 1200 }}>
+      <table
+        style={{
+          minWidth: 1100,
+          width: '100%',
+          borderCollapse: 'separate',
+          borderSpacing: 0,
+        }}
+      >
         <thead className="sticky top-0 z-10">
-          <tr className="border-b border-border bg-muted/50 backdrop-blur-sm">
+          <tr
+            style={{
+              background:
+                'linear-gradient(135deg, #1e3a5f 0%, #1e4976 50%, #155e8e 100%)',
+            }}
+          >
+            {[
+              { label: 'Nom', width: 150 },
+              { label: 'Bailleur(s)', width: 140 },
+              { label: 'Description', width: 200 },
+              { label: 'Activités', width: 200 },
+              { label: 'Aires protégées', width: 150 },
+              { label: 'Début', width: 110 },
+              { label: 'Fin', width: 110 },
+              { label: 'Montant', width: 130 },
+            ].map(({ label, width }) => (
+              <th
+                key={label}
+                style={{
+                  minWidth: width,
+                  padding: '12px 16px',
+                  textAlign: 'left',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.92)',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  borderBottom: '2px solid rgba(255,255,255,0.15)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </th>
+            ))}
             <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 180 }}
-            >
-              Nom
-            </th>
-            <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 160 }}
-            >
-              Bailleur(s)
-            </th>
-            <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 220 }}
-            >
-              Description
-            </th>
-            <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 200 }}
-            >
-              Activités
-            </th>
-            <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 160 }}
-            >
-              Aires protégées
-            </th>
-            <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 130 }}
-            >
-              Début
-            </th>
-            <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 130 }}
-            >
-              Fin
-            </th>
-            <th
-              className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap"
-              style={{ minWidth: 140 }}
-            >
-              Montant
-            </th>
-            <th
-              className="px-6 py-3 text-right text-sm font-semibold whitespace-nowrap sticky right-0 bg-muted/50 backdrop-blur-sm"
-              style={{ minWidth: 168 }}
+              className="sticky right-0"
+              style={{
+                minWidth: 168,
+                padding: '12px 16px',
+                textAlign: 'right',
+                fontSize: 12,
+                fontWeight: 700,
+                color: 'rgba(255,255,255,0.92)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                borderBottom: '2px solid rgba(255,255,255,0.15)',
+                background: 'linear-gradient(135deg, #155e8e 0%, #1e3a5f 100%)',
+                whiteSpace: 'nowrap',
+              }}
             >
               Actions
             </th>
           </tr>
         </thead>
         <tbody>
-          {fundings.map((funding) => (
-            <tr
-              key={funding.id}
-              className="border-b border-border hover:bg-muted/30 transition-colors"
-            >
-              <td className="px-6 py-3 text-sm font-medium whitespace-nowrap">
-                {funding.name || '-'}
-              </td>
-              <td className="px-6 py-3 text-sm text-muted-foreground">
-                {funding.funderFundings?.map((f) => (
-                  <span key={f.id} className="block whitespace-nowrap">
-                    {f.funder?.name}
-                  </span>
-                )) ?? '-'}
-              </td>
+          {fundings.map((funding, rowIndex) => {
+            const isEven = rowIndex % 2 === 0;
+            const rowBg = isEven ? '#ffffff' : '#f8fafc';
 
-              {/* Description — tronquée avec tooltip */}
-              <td
-                className="px-6 py-3 text-sm text-muted-foreground"
-                style={{ maxWidth: 220 }}
+            return (
+              <tr
+                key={funding.id}
+                style={{ background: rowBg, transition: 'background 0.15s' }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLTableRowElement).style.background =
+                    '#eff6ff';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLTableRowElement).style.background =
+                    rowBg;
+                }}
               >
-                {funding.description ? (
+                {/* Nom — largeur réduite, retour à la ligne autorisé */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    maxWidth: 150,
+                    wordBreak: 'break-word',
+                    lineHeight: '1.4',
+                  }}
+                >
                   <span
-                    title={funding.description}
                     style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
+                      display: 'inline-block',
+                      background:
+                        'linear-gradient(135deg, #1e3a5f15, #1e497620)',
+                      borderLeft: '3px solid #1e4976',
+                      paddingLeft: 8,
+                      paddingRight: 6,
+                      paddingTop: 2,
+                      paddingBottom: 2,
+                      borderRadius: '0 4px 4px 0',
                     }}
                   >
-                    {funding.description}
+                    {funding.name || '-'}
                   </span>
-                ) : (
-                  '—'
-                )}
-              </td>
+                </td>
 
-              {/* Activités */}
-              <td className="px-6 py-3">
-                <ActivityPills activities={funding.activityFundings ?? []} />
-              </td>
+                {/* Bailleur(s) */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 12,
+                    color: '#475569',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                  }}
+                >
+                  {funding.funderFundings?.length ? (
+                    <div className="flex flex-col gap-1">
+                      {funding.funderFundings.map((f) => (
+                        <span
+                          key={f.id}
+                          style={{
+                            display: 'inline-block',
+                            background: '#f1f5f9',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: 4,
+                            padding: '2px 7px',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#334155',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {f.funder?.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span style={{ color: '#94a3b8' }}>—</span>
+                  )}
+                </td>
 
-              {/* Aires protégées */}
-              <td className="px-6 py-3">
-                <ProtectedAreaPills
-                  areas={funding.protectedAreaFundings ?? []}
-                />
-              </td>
+                {/* Description */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 12,
+                    color: '#64748b',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    maxWidth: 200,
+                  }}
+                >
+                  {funding.description ? (
+                    <span
+                      title={funding.description}
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        lineHeight: '1.5',
+                      }}
+                    >
+                      {funding.description}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#94a3b8' }}>—</span>
+                  )}
+                </td>
 
-              <td className="px-6 py-3 text-sm whitespace-nowrap">
-                {formatMonthYear(funding.debut)}
-              </td>
-              <td className="px-6 py-3 text-sm whitespace-nowrap">
-                {formatMonthYear(funding.end)}
-              </td>
-              <td className="px-6 py-3 text-sm whitespace-nowrap">
-                {formatAmount(funding.amount, funding.currency)}
-              </td>
+                {/* Activités — toutes affichées */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                  }}
+                >
+                  <ActivityPills activities={funding.activityFundings ?? []} />
+                </td>
 
-              {/* Actions — collée à droite */}
-              <td className="px-6 py-3 sticky right-0 bg-background border-l border-border">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onAddDisbursement(funding.id)}
-                    className="w-9 h-9 p-0 text-green-700 hover:text-green-800 hover:bg-green-50"
-                    title="Ajouter un décaissement"
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                  </Button>
+                {/* Aires protégées */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                  }}
+                >
+                  <ProtectedAreaPills
+                    areas={funding.protectedAreaFundings ?? []}
+                  />
+                </td>
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      onEdit({
-                        id: funding.id,
-                        name: funding.name,
-                        amount: funding.amount,
-                        currency: funding.currency,
-                        debut: funding.debut,
-                        end: funding.end,
-                        projectId: funding.project?.id,
-                        protectedAreaIds:
-                          funding.protectedAreaFundings?.map(
-                            (paf) => paf.protectedArea?.id ?? '',
-                          ) ?? [],
-                        funders:
-                          funding.funderFundings?.map(
-                            (ff) => ff.funder?.id ?? '',
-                          ) ?? [],
-                      })
-                    }
-                    className="w-9 h-9 p-0"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
+                {/* Début */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 12,
+                    color: '#475569',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatMonthYear(funding.debut)}
+                </td>
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      onDelete({
-                        id: funding.id,
-                        name: funding.name,
-                        projectId: funding.project?.id,
-                      })
-                    }
-                    className="w-9 h-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                {/* Fin */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 12,
+                    color: '#475569',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatMonthYear(funding.end)}
+                </td>
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => router.push(`/admin/fundings/${funding.id}`)}
-                    className="w-9 h-9 p-0"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                {/* Montant */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {funding.amount ? (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                        border: '1px solid #86efac',
+                        borderRadius: 6,
+                        padding: '3px 10px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#15803d',
+                      }}
+                    >
+                      {formatAmount(funding.amount, funding.currency)}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>
+                  )}
+                </td>
+
+                {/* Actions — sticky droite */}
+                <td
+                  className="sticky right-0"
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid #e2e8f0',
+                    borderLeft: '1px solid #e2e8f0',
+                    background: isEven ? '#ffffff' : '#f8fafc',
+                    verticalAlign: 'top',
+                  }}
+                >
+                  <div className="flex justify-end gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onAddDisbursement(funding.id)}
+                      className="w-8 h-8 p-0 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200"
+                      title="Ajouter un décaissement"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        onEdit({
+                          id: funding.id,
+                          name: funding.name,
+                          amount: funding.amount,
+                          currency: funding.currency,
+                          debut: funding.debut,
+                          end: funding.end,
+                          projectId: funding.project?.id,
+                          protectedAreaIds:
+                            funding.protectedAreaFundings?.map(
+                              (paf) => paf.protectedArea?.id ?? '',
+                            ) ?? [],
+                          funders:
+                            funding.funderFundings?.map(
+                              (ff) => ff.funder?.id ?? '',
+                            ) ?? [],
+                        })
+                      }
+                      className="w-8 h-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        onDelete({
+                          id: funding.id,
+                          name: funding.name,
+                          projectId: funding.project?.id,
+                        })
+                      }
+                      className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        router.push(`/admin/fundings/${funding.id}`)
+                      }
+                      className="w-8 h-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
