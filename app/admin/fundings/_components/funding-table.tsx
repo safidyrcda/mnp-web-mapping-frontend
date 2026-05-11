@@ -401,34 +401,6 @@ export function FundingTable({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {/* Début */}
-                  <td
-                    style={{
-                      padding: '12px 16px',
-                      fontSize: 12,
-                      color: '#475569',
-                      borderBottom: '1px solid #e2e8f0',
-                      verticalAlign: 'top',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {formatMonthYear(funding.debut)}
-                  </td>
-
-                  {/* Fin */}
-                  <td
-                    style={{
-                      padding: '12px 16px',
-                      fontSize: 12,
-                      color: '#475569',
-                      borderBottom: '1px solid #e2e8f0',
-                      verticalAlign: 'top',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {formatMonthYear(funding.end)}
-                  </td>
-
                   {funding.amount ? (
                     <span
                       style={{
@@ -447,6 +419,34 @@ export function FundingTable({
                   ) : (
                     <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>
                   )}
+                </td>
+
+                {/* Début */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 12,
+                    color: '#475569',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatMonthYear(funding.debut)}
+                </td>
+
+                {/* Fin */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    fontSize: 12,
+                    color: '#475569',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formatMonthYear(funding.end)}
                 </td>
 
                 {/* Actions — sticky droite */}
