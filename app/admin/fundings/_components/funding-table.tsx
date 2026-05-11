@@ -318,15 +318,18 @@ export function FundingTable({
                         <span
                           key={f.id}
                           style={{
-                            display: 'inline-block',
+                            display: 'block',
                             background: '#f1f5f9',
                             border: '1px solid #cbd5e1',
                             borderRadius: 4,
-                            padding: '2px 7px',
+                            padding: '3px 7px',
                             fontSize: 11,
                             fontWeight: 600,
                             color: '#334155',
-                            whiteSpace: 'nowrap',
+                            wordBreak: 'break-word', // ← coupe si un mot est très long
+                            overflowWrap: 'break-word', // ← fallback cross-browser
+                            whiteSpace: 'normal', // ← autorise le retour à la ligne
+                            lineHeight: '1.5',
                           }}
                         >
                           {f.funder?.name}
