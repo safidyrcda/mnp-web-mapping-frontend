@@ -187,7 +187,7 @@ export function FundingTable({
   return (
     <div
       className="rounded-xl border border-border overflow-auto shadow-sm"
-      style={{ maxHeight: '70vh' }}
+      style={{ maxHeight: '60vh' }}
     >
       <table
         style={{
@@ -392,34 +392,6 @@ export function FundingTable({
                   />
                 </td>
 
-                {/* Début */}
-                <td
-                  style={{
-                    padding: '12px 16px',
-                    fontSize: 12,
-                    color: '#475569',
-                    borderBottom: '1px solid #e2e8f0',
-                    verticalAlign: 'top',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {formatMonthYear(funding.debut)}
-                </td>
-
-                {/* Fin */}
-                <td
-                  style={{
-                    padding: '12px 16px',
-                    fontSize: 12,
-                    color: '#475569',
-                    borderBottom: '1px solid #e2e8f0',
-                    verticalAlign: 'top',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {formatMonthYear(funding.end)}
-                </td>
-
                 {/* Montant */}
                 <td
                   style={{
@@ -429,6 +401,34 @@ export function FundingTable({
                     whiteSpace: 'nowrap',
                   }}
                 >
+                  {/* Début */}
+                  <td
+                    style={{
+                      padding: '12px 16px',
+                      fontSize: 12,
+                      color: '#475569',
+                      borderBottom: '1px solid #e2e8f0',
+                      verticalAlign: 'top',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {formatMonthYear(funding.debut)}
+                  </td>
+
+                  {/* Fin */}
+                  <td
+                    style={{
+                      padding: '12px 16px',
+                      fontSize: 12,
+                      color: '#475569',
+                      borderBottom: '1px solid #e2e8f0',
+                      verticalAlign: 'top',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {formatMonthYear(funding.end)}
+                  </td>
+
                   {funding.amount ? (
                     <span
                       style={{
