@@ -210,9 +210,9 @@ export function FundingTable({
               { label: 'Description', width: 200 },
               { label: 'Activités', width: 200 },
               { label: 'Aires protégées', width: 300 },
+              { label: 'Montant', width: 130 },
               { label: 'Début', width: 110 },
               { label: 'Fin', width: 110 },
-              { label: 'Montant', width: 130 },
             ].map(({ label, width }) => (
               <th
                 key={label}
