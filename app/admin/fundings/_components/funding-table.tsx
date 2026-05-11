@@ -187,7 +187,7 @@ export function FundingTable({
   return (
     <div
       className="rounded-xl border border-border overflow-auto shadow-sm"
-      style={{ maxHeight: '60vh' }}
+      style={{ maxHeight: '70vh' }}
     >
       <table
         style={{

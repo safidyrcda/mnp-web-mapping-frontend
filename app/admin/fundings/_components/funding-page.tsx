@@ -41,7 +41,7 @@ export function FundingPage() {
   const [filterCurrency, setFilterCurrency] = useState('');
   const [filterYearStart, setFilterYearStart] = useState('');
   const [filterYearEnd, setFilterYearEnd] = useState('');
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── Modale état ───────────────────────────────────────────────────────────
   const [selectedFunding, setSelectedFunding] = useState<Funding | null>(null);
