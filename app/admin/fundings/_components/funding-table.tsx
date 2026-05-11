@@ -357,9 +357,7 @@ export function FundingTable({
                       title={funding.description}
                       style={{
                         display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
+
                         lineHeight: '1.5',
                       }}
                     >
