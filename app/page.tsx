@@ -66,29 +66,6 @@ export default function Page() {
       {/* Map Section */}
       <section className="flex-1 w-full py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          {/* Titre section */}
-          <div className="mb-6">
-            <h2
-              style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: '#1e3a5f',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Aires protégées de Madagascar
-            </h2>
-            <div
-              style={{
-                width: 48,
-                height: 3,
-                background: 'linear-gradient(90deg, #1e4976, #22c55e)',
-                borderRadius: 99,
-                marginTop: 6,
-              }}
-            />
-          </div>
-
           <div className="flex flex-col md:flex-row md:items-start gap-6">
             {/* Panneau gauche */}
             <div className="md:w-[42%]">
