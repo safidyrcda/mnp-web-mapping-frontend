@@ -205,11 +205,11 @@ export function FundingTable({
             }}
           >
             {[
-              { label: 'Nom', width: 200 },
+              { label: 'Nom', width: 300 },
               { label: 'Bailleur(s)', width: 150 },
               { label: 'Description', width: 200 },
               { label: 'Activités', width: 200 },
-              { label: 'Aires protégées', width: 400 },
+              { label: 'Aires protégées', width: 300 },
               { label: 'Début', width: 110 },
               { label: 'Fin', width: 110 },
               { label: 'Montant', width: 130 },
@@ -279,7 +279,7 @@ export function FundingTable({
                     color: '#0f172a',
                     borderBottom: '1px solid #e2e8f0',
                     verticalAlign: 'top',
-                    maxWidth: 200,
+                    maxWidth: 300,
                     wordBreak: 'break-word',
                     lineHeight: '1.4',
                   }}
