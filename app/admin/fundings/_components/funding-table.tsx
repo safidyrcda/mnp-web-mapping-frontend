@@ -209,7 +209,7 @@ export function FundingTable({
               { label: 'Bailleur(s)', width: 50 },
               { label: 'Description', width: 200 },
               { label: 'Activités', width: 200 },
-              { label: 'Aires protégées', width: 240 },
+              { label: 'Aires protégées', width: 400 },
               { label: 'Début', width: 110 },
               { label: 'Fin', width: 110 },
               { label: 'Montant', width: 130 },
@@ -309,6 +309,7 @@ export function FundingTable({
                     color: '#475569',
                     borderBottom: '1px solid #e2e8f0',
                     verticalAlign: 'top',
+                    maxWidth: 50,
                   }}
                 >
                   {funding.funderFundings?.length ? (
