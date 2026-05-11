@@ -122,7 +122,7 @@ export function FundingTable({
       protectedArea: { id?: string; sigle?: string; name?: string };
     }[];
   }) {
-    const MAX_VISIBLE = 2;
+    const MAX_VISIBLE = 43;
     const visible = areas.slice(0, MAX_VISIBLE);
     const hidden = areas.slice(MAX_VISIBLE);
 
@@ -206,10 +206,10 @@ export function FundingTable({
           >
             {[
               { label: 'Nom', width: 150 },
-              { label: 'Bailleur(s)', width: 140 },
+              { label: 'Bailleur(s)', width: 50 },
               { label: 'Description', width: 200 },
               { label: 'Activités', width: 200 },
-              { label: 'Aires protégées', width: 150 },
+              { label: 'Aires protégées', width: 240 },
               { label: 'Début', width: 110 },
               { label: 'Fin', width: 110 },
               { label: 'Montant', width: 130 },
