@@ -9,11 +9,11 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   const links = [
-    {
-      href: '/admin/activities',
-      icon: AlignStartVertical,
-      label: 'Activités',
-    },
+    // {
+    //   href: '/admin/activities',
+    //   icon: AlignStartVertical,
+    //   label: 'Activités',
+    // },
     // {
     //   href: '/admin/projects',
     //   icon: FolderOpen,
