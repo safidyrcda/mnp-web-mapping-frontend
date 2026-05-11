@@ -206,6 +206,13 @@ export function FundingForm({
         label="Nom du financement"
         placeholder="ex. Financement GEF REDD+"
       />
+      <FormInput
+        control={form.control}
+        name="description"
+        label="Description"
+        placeholder="Brève description du financement…"
+        description="Optionnel — apparaîtra dans le tableau"
+      />
 
       {/* ── Montants : deux colonnes ───────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4">

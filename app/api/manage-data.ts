@@ -56,6 +56,7 @@ export const deleteProject = async (id: string) =>
 export type FundingItem = {
   id: string;
   name?: string;
+  description?: string; // ← nouveau
   debut?: Date;
   end?: Date;
   amount?: number;

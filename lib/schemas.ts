@@ -56,6 +56,7 @@ export type Disbursement = z.infer<typeof disbursementSchema>;
 export const fundingSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
   funders: z
     .array(z.string().uuid())
     .min(1, 'Au moins un financeur doit être sélectionné')
