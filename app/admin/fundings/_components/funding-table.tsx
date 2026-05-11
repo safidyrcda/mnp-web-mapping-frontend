@@ -235,7 +235,7 @@ export function FundingTable({
             <th
               className="sticky right-0"
               style={{
-                minWidth: 168,
+                minWidth: 89,
                 padding: '12px 16px',
                 textAlign: 'right',
                 fontSize: 12,
