@@ -461,7 +461,7 @@ export function FundingTable({
                   }}
                 >
                   <div className="flex justify-end gap-1.5">
-                    <Button
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() => onAddDisbursement(funding.id)}
@@ -469,7 +469,7 @@ export function FundingTable({
                       title="Ajouter un décaissement"
                     >
                       <PlusCircle className="w-3.5 h-3.5" />
-                    </Button>
+                    </Button> */}
 
                     <Button
                       size="sm"
@@ -513,7 +513,7 @@ export function FundingTable({
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
 
-                    <Button
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() =>
@@ -522,7 +522,7 @@ export function FundingTable({
                       className="w-8 h-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                    </Button>
+                    </Button> */}
                   </div>
                 </td>
               </tr>
