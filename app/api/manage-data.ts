@@ -129,17 +129,31 @@ export const deleteDisbursement = async (id: string) =>
 
 // Ajouter ces types et cette fonction
 
+// Remplacer FundingDetail et ProtectedAreaDetail par :
+
+export type FunderInFunding = {
+  id: string;
+  name: string;
+  fullname?: string;
+  type?: 'funder' | 'technical_partner' | 'strategical_partner';
+};
+
 export type FundingDetail = {
   id: string;
   name?: string;
   debut?: string;
   end?: string;
-  amount?: number;
-  currency?: string;
-  amountInEuro?: number;
+  // Montant global du financement (tous APs confondus)
+  globalAmount?: number;
+  globalCurrency?: string;
+  globalAmountInEuro?: number;
+  // Montant spécifique à cette AP
+  paAmount?: number;
+  paCurrency?: string;
+  paAmountInEuro?: number;
   totalDisbursed: number;
   totalDisbursedEuro: number;
-  funders: { id: string; name: string; fullname?: string }[];
+  funders: FunderInFunding[];
   otherProtectedAreas: { id: string; sigle: string; name: string }[];
 };
 
@@ -149,6 +163,15 @@ export type ProtectedAreaDetail = {
   name: string;
   status?: string;
   size?: number;
+  // ── Nouveaux champs ──
+  superficie?: number;
+  creationYear?: number;
+  region?: string[];
+  districts?: string[];
+  communes?: string[];
+  populationCount?: number;
+  femaleClpNumber?: number;
+  maleClpNumber?: number;
   fundings: FundingDetail[];
 };
 

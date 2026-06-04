@@ -243,7 +243,7 @@ export function FundingFundersModal({
                         <Pencil size={11} />
                         {isEditing ? 'Replier' : 'Modifier'}
                       </button>
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => removeEntry(i)}
                         style={{
@@ -269,7 +269,7 @@ export function FundingFundersModal({
                         }}
                       >
                         <Trash2 size={13} />
-                      </button>
+                      </button> */}
                     </div>
                   </div>
 
@@ -366,7 +366,7 @@ export function FundingFundersModal({
               );
             })}
 
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               size="sm"
@@ -375,7 +375,7 @@ export function FundingFundersModal({
             >
               <Plus className="w-4 h-4" />
               Ajouter un bailleur / partenaire
-            </Button>
+            </Button> */}
 
             <div className="flex justify-end gap-3 pt-2 border-t border-border">
               <Button

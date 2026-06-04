@@ -4,32 +4,27 @@ import {
   X,
   ArrowRight,
   Users,
-  Banknote,
   Calendar,
   Activity,
   TreePine,
   Loader2,
   MapPin,
+  Ruler,
+  CalendarDays,
+  PersonStanding,
+  Layers,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import {
   getProtectedAreaDetail,
   type ProtectedAreaDetail,
+  type FunderInFunding,
 } from '@/app/api/manage-data';
 
 interface FeaturePanelProps {
   feature: any;
   onClose: () => void;
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatAmount(amount?: number) {
-  if (!amount) return null;
-  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(
-    amount,
-  );
 }
 
 function formatYear(date?: string) {
@@ -50,6 +45,31 @@ function statusColor(status?: string) {
   return { bg: '#f3e5f5', text: '#4a148c', dot: '#8e24aa' };
 }
 
+// ── Types de partenaires ─────────────────────────────────────────────────────
+
+const FUNDER_TYPE_STYLES = {
+  funder: {
+    bg: '#eff6ff',
+    text: '#1d4ed8',
+    border: '#bfdbfe',
+    label: 'Bailleur',
+  },
+  technical_partner: {
+    bg: '#f0fdf4',
+    text: '#15803d',
+    border: '#86efac',
+    label: 'Partenaire technique',
+  },
+  strategical_partner: {
+    bg: '#fdf4ff',
+    text: '#7e22ce',
+    border: '#e9d5ff',
+    label: 'Partenaire stratégique',
+  },
+} as const;
+
+type FunderType = keyof typeof FUNDER_TYPE_STYLES;
+
 // ── Composant principal ───────────────────────────────────────────────────────
 
 export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
@@ -62,12 +82,10 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
   const [visible, setVisible] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Slide-in on mount
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
-  // Fetch data
   useEffect(() => {
     if (!id) {
       setLoading(false);
@@ -80,13 +98,14 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Close with slide-out animation
   const handleClose = () => {
     setVisible(false);
     setTimeout(onClose, 380);
   };
 
   const colors = statusColor(properties.status);
+
+  // ── Agrégations ──────────────────────────────────────────────────────────
   const allFunders = detail
     ? [
         ...new Map(
@@ -94,27 +113,34 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
         ).values(),
       ]
     : [];
-  const totalAmount = detail?.fundings?.reduce(
-    (s, f) => s + (f.amountInEuro ?? 0),
-    0,
-  );
-  const totalDisbursed = detail?.fundings?.reduce(
-    (s, f) => s + (f.totalDisbursedEuro ?? 0),
-    0,
-  );
+
+  // Séparer par type
+  const fundersByType = {
+    funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
+    technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
+    strategical_partner: allFunders.filter(
+      (f) => f.type === 'strategical_partner',
+    ),
+  };
+
   const totalFundings = detail?.fundings?.length ?? 0;
   const activeUntil = detail?.fundings
     ?.map((f) => f.end)
     .filter(Boolean)
     .sort()
     .reverse()[0];
+
   const sizeHa = properties.size
     ? Math.round(Number(properties.size)).toLocaleString('fr-FR')
     : null;
 
+  // Cumul CLP
+  const totalClp =
+    (detail?.femaleClpNumber ?? 0) + (detail?.maleClpNumber ?? 0);
+
   return (
     <>
-      {/* ── Backdrop ── */}
+      {/* Backdrop */}
       <div
         onClick={handleClose}
         style={{
@@ -130,7 +156,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
         }}
       />
 
-      {/* ── Panel ── */}
+      {/* Panel */}
       <div
         ref={panelRef}
         style={{
@@ -160,7 +186,6 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
             position: 'relative',
           }}
         >
-          {/* Decorative circle */}
           <div
             style={{
               position: 'absolute',
@@ -284,14 +309,27 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                   fontSize: 12,
                 }}
               >
-                <MapPin size={12} />
-                {sizeHa} ha
+                <MapPin size={12} /> {sizeHa} ha
+              </span>
+            )}
+
+            {detail?.creationYear && (
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 12,
+                }}
+              >
+                <CalendarDays size={12} /> Créée en {detail.creationYear}
               </span>
             )}
           </div>
         </div>
 
-        {/* ── Scrollable body ── */}
+        {/* ── Body scrollable ── */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
           {loading ? (
             <div
@@ -314,7 +352,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
             </div>
           ) : (
             <>
-              {/* Metrics grid */}
+              {/* ── Métriques principales ── */}
               <div
                 style={{
                   display: 'grid',
@@ -335,7 +373,6 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                   value={allFunders.length > 0 ? `${allFunders.length}` : '—'}
                   accent="#1565c0"
                 />
-
                 {activeUntil && (
                   <MetricCard
                     icon={<Calendar size={15} color="#00695c" />}
@@ -344,34 +381,139 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                     accent="#00695c"
                   />
                 )}
+                {detail?.populationCount && (
+                  <MetricCard
+                    icon={<PersonStanding size={15} color="#7c3aed" />}
+                    label="Population"
+                    value={detail.populationCount.toLocaleString('fr-FR')}
+                    accent="#7c3aed"
+                  />
+                )}
+                {totalClp > 0 && (
+                  <MetricCard
+                    icon={<Users size={15} color="#b45309" />}
+                    label="Membres CLP"
+                    value={totalClp.toLocaleString('fr-FR')}
+                    accent="#b45309"
+                    sub={
+                      detail?.femaleClpNumber && detail?.maleClpNumber
+                        ? `${detail.femaleClpNumber}F · ${detail.maleClpNumber}H`
+                        : undefined
+                    }
+                  />
+                )}
+                {detail?.superficie && (
+                  <MetricCard
+                    icon={<Ruler size={15} color="#0e7490" />}
+                    label="Superficie"
+                    value={`${detail.superficie.toLocaleString('fr-FR')} ha`}
+                    accent="#0e7490"
+                  />
+                )}
               </div>
 
-              {/* Funders */}
-              {allFunders.length > 0 && (
-                <Section title="Bailleurs / Partenaires">
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {allFunders.map((fu) => (
-                      <span
-                        key={fu.id}
-                        style={{
-                          background: '#f1f5f9',
-                          color: '#334155',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          padding: '4px 10px',
-                          borderRadius: 6,
-                        }}
-                      >
-                        {fu.name}
-                      </span>
-                    ))}
+              {/* ── Localisation ── */}
+              {(detail?.region?.length ||
+                detail?.districts?.length ||
+                detail?.communes?.length) && (
+                <Section title="Localisation">
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                  >
+                    {detail?.region?.length && (
+                      <LocalisationRow
+                        label="Région"
+                        values={detail.region}
+                        color="#1e4976"
+                      />
+                    )}
+                    {detail?.districts?.length && (
+                      <LocalisationRow
+                        label="Districts"
+                        values={detail.districts}
+                        color="#0e7490"
+                      />
+                    )}
+                    {detail?.communes?.length && (
+                      <LocalisationRow
+                        label="Communes"
+                        values={detail.communes}
+                        color="#6d28d9"
+                      />
+                    )}
                   </div>
                 </Section>
               )}
 
-              {/* Projects */}
+              {/* ── Bailleurs / Partenaires séparés par type ── */}
+              {allFunders.length > 0 && (
+                <Section title="Bailleurs & Partenaires">
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 12,
+                    }}
+                  >
+                    {(
+                      [
+                        'funder',
+                        'technical_partner',
+                        'strategical_partner',
+                      ] as FunderType[]
+                    ).map((type) => {
+                      const group = fundersByType[type];
+                      if (group.length === 0) return null;
+                      const style = FUNDER_TYPE_STYLES[type];
+                      return (
+                        <div key={type}>
+                          <p
+                            style={{
+                              margin: '0 0 6px',
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: style.text,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
+                            }}
+                          >
+                            {style.label}s ({group.length})
+                          </p>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 6,
+                            }}
+                          >
+                            {group.map((fu) => (
+                              <span
+                                key={fu.id}
+                                title={fu.fullname}
+                                style={{
+                                  background: style.bg,
+                                  color: style.text,
+                                  border: `1px solid ${style.border}`,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  padding: '4px 10px',
+                                  borderRadius: 6,
+                                }}
+                              >
+                                {fu.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Section>
+              )}
+
+              {/* ── Financements ── */}
               {detail && detail.fundings.length > 0 && (
-                <Section title={`Projets (${detail.fundings.length})`}>
+                <Section title={`Financements (${detail.fundings.length})`}>
                   <div
                     style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
                   >
@@ -416,7 +558,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
           )}
         </div>
 
-        {/* ── Footer CTA ── */}
+        {/* ── Footer ── */}
         <div
           style={{
             padding: '16px 32px 24px',
@@ -453,8 +595,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            Voir tous les projets
-            <ArrowRight size={16} />
+            Voir tous les projets <ArrowRight size={16} />
           </button>
         </div>
       </div>
@@ -462,7 +603,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
   );
 }
 
-// ── Section wrapper ───────────────────────────────────────────────────────────
+// ── Helpers UI ────────────────────────────────────────────────────────────────
 
 function Section({
   title,
@@ -490,18 +631,18 @@ function Section({
   );
 }
 
-// ── MetricCard ────────────────────────────────────────────────────────────────
-
 function MetricCard({
   icon,
   label,
   value,
   accent,
+  sub,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   accent: string;
+  sub?: string;
 }) {
   return (
     <div
@@ -536,6 +677,64 @@ function MetricCard({
       <span style={{ fontSize: 20, fontWeight: 800, color: '#1a1a1a' }}>
         {value}
       </span>
+      {sub && (
+        <p
+          style={{
+            margin: '3px 0 0',
+            fontSize: 11,
+            color: '#94a3b8',
+            fontWeight: 500,
+          }}
+        >
+          {sub}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function LocalisationRow({
+  label,
+  values,
+  color,
+}: {
+  label: string;
+  values: string[];
+  color: string;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: '#94a3b8',
+          minWidth: 64,
+          paddingTop: 3,
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+        }}
+      >
+        {label}
+      </span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        {values.map((v) => (
+          <span
+            key={v}
+            style={{
+              background: '#f8fafc',
+              color,
+              border: '1px solid #e2e8f0',
+              fontSize: 11,
+              fontWeight: 600,
+              padding: '2px 8px',
+              borderRadius: 5,
+            }}
+          >
+            {v}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   fundingSchema,
@@ -20,14 +20,7 @@ import {
 } from '@/app/api/manage-data';
 import type { Activity } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
-import {
-  Plus,
-  Trash2,
-  Link,
-  Unlink,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { Plus, Trash2, Link, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface FundingFormProps {
   initialData?: Funding;
@@ -43,20 +36,14 @@ type FundingFormValues = Funding & {
   amountInEuro?: number | null;
 };
 
-// ─── Types locaux pour la gestion des activités dans le formulaire ──────────
-
 type ActivityMode = 'new' | 'existing';
 
 interface ActivityEntry {
   mode: ActivityMode;
-  // Pour mode 'new'
   title?: string;
   description?: string;
-  // Pour mode 'existing'
   existingId?: string;
 }
-
-// ─── Composant principal ─────────────────────────────────────────────────────
 
 export function FundingForm({
   initialData,
@@ -69,6 +56,27 @@ export function FundingForm({
   const form = useForm<FundingFormValues>({
     resolver: zodResolver(fundingSchema),
     defaultValues: {
+      name: '',
+      debut: undefined,
+      end: undefined,
+      currency: undefined,
+      amount: undefined,
+      amountInEuro: undefined,
+      funders: [],
+      protectedAreaIds: [],
+    },
+  });
+
+  const [activities, setActivities] = useState<ActivityEntry[]>([]);
+  const [allActivities, setAllActivities] = useState<Activity[]>([]);
+  const [activitiesOpen, setActivitiesOpen] = useState(false);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+
+  // ── Reset complet du formulaire à chaque ouverture ────────────────────────
+  useEffect(() => {
+    const paIds = initialData?.protectedAreaIds?.filter(Boolean) ?? [];
+
+    form.reset({
       name: initialData?.name ?? '',
       debut: initialData?.debut,
       end: initialData?.end,
@@ -77,63 +85,67 @@ export function FundingForm({
       amountInEuro: (initialData as FundingFormValues)?.amountInEuro,
       funders: [],
       protectedAreaIds:
-        initialData?.protectedAreaIds ??
-        (selectedProtectedArea ? [selectedProtectedArea] : []),
-    },
-  });
+        paIds.length > 0
+          ? paIds
+          : selectedProtectedArea
+            ? [selectedProtectedArea]
+            : [],
+    });
 
-  // ── État des activités (géré localement, pas dans react-hook-form) ─────────
-  const [activities, setActivities] = useState<ActivityEntry[]>([]);
-  const [allActivities, setAllActivities] = useState<Activity[]>([]);
-  const [linkedActivityIds, setLinkedActivityIds] = useState<string[]>([]);
-  const [activitiesOpen, setActivitiesOpen] = useState(false);
-  const [loadingActivities, setLoadingActivities] = useState(false);
+    // Reset activités
+    setActivities([]);
+    setActivitiesOpen(false);
+  }, [initialData?.id]);
 
-  // ── Chargement initial des données ────────────────────────────────────────
+  // ── Chargement des activités existantes ───────────────────────────────────
   useEffect(() => {
-    // Charger la liste de toutes les activités existantes (pour le select)
     getAllActivities().then(setAllActivities).catch(console.error);
   }, []);
 
+  // ── Chargement des relations liées au financement ─────────────────────────
   useEffect(() => {
-    if (initialData?.id) {
-      // Charger les bailleurs liés à ce financement
-      fetchFundersByFunding(initialData.id).then((res: Funder[]) => {
-        form.setValue(
-          'funders',
-          res.map((f) => f.id || ''),
+    if (!initialData?.id) return;
+
+    // Bailleurs
+    fetchFundersByFunding(initialData.id)
+      .then((res: Funder[]) => {
+        form.setValue('funders', res.map((f) => f.id || '').filter(Boolean));
+      })
+      .catch(console.error);
+
+    // APs — s'assurer qu'elles sont bien définies même si reset les a écrasées
+    const paIds = initialData.protectedAreaIds?.filter(Boolean) ?? [];
+    if (paIds.length > 0) {
+      form.setValue('protectedAreaIds', paIds);
+    }
+
+    // Activités
+    setLoadingActivities(true);
+    getActivitiesByFunding(initialData.id)
+      .then((linked: Activity[]) => {
+        setActivities(
+          linked.map((a) => ({
+            mode: 'existing' as ActivityMode,
+            existingId: a.id ?? '',
+            title: a.title,
+          })),
         );
-      });
+        if (linked.length > 0) setActivitiesOpen(true);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingActivities(false));
+  }, [initialData?.id]);
 
-      // Charger les activités déjà liées à ce financement
-      setLoadingActivities(true);
-      getActivitiesByFunding(initialData.id)
-        .then((linked: Activity[]) => {
-          const ids = linked.map((a) => a.id ?? '').filter(Boolean);
-          setLinkedActivityIds(ids);
-          // Pré-remplir les lignes d'activités existantes
-          setActivities(
-            linked.map((a) => ({
-              mode: 'existing' as ActivityMode,
-              existingId: a.id ?? '',
-              title: a.title,
-            })),
-          );
-          if (linked.length > 0) setActivitiesOpen(true);
-        })
-        .catch(console.error)
-        .finally(() => setLoadingActivities(false));
-    }
+  // ── Synchroniser selectedProtectedArea en mode création ──────────────────
+  useEffect(() => {
+    if (initialData?.id) return; // édition → ne pas écraser
+    form.setValue(
+      'protectedAreaIds',
+      selectedProtectedArea ? [selectedProtectedArea] : [],
+    );
+  }, [selectedProtectedArea, initialData?.id]);
 
-    if (!initialData) {
-      form.setValue(
-        'protectedAreaIds',
-        selectedProtectedArea ? [selectedProtectedArea] : [],
-      );
-    }
-  }, [initialData, selectedProtectedArea]);
-
-  // ── Gestionnaires d'activités ─────────────────────────────────────────────
+  // ── Gestionnaires activités ───────────────────────────────────────────────
 
   const addNewActivity = () => {
     setActivities((prev) => [
@@ -148,20 +160,17 @@ export function FundingForm({
     setActivitiesOpen(true);
   };
 
-  const removeActivity = (index: number) => {
+  const removeActivity = (index: number) =>
     setActivities((prev) => prev.filter((_, i) => i !== index));
-  };
 
-  const updateActivity = (index: number, patch: Partial<ActivityEntry>) => {
+  const updateActivity = (index: number, patch: Partial<ActivityEntry>) =>
     setActivities((prev) =>
       prev.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)),
     );
-  };
 
-  // ── Soumission ─────────────────────────────────────────────────────────────
+  // ── Soumission ────────────────────────────────────────────────────────────
 
   const handleSubmit = async (data: FundingFormValues) => {
-    // Séparer les activités nouvelles des activités existantes à lier
     const newActivities = activities
       .filter((a) => a.mode === 'new' && a.title?.trim())
       .map(({ title, description }) => ({ title: title!, description }));
@@ -173,13 +182,13 @@ export function FundingForm({
     await onSubmit({
       ...data,
       id: initialData?.id,
-      // Ces champs sont attendus par CreateFundingData / UpdateFundingData
       newActivities: newActivities.length > 0 ? newActivities : undefined,
       activityIds: activityIds.length > 0 ? activityIds : undefined,
     } as Partial<Funding>);
   };
 
-  // ── Activités disponibles pour le select (exclure celles déjà ajoutées) ───
+  // ── Activités disponibles ─────────────────────────────────────────────────
+
   const usedExistingIds = activities
     .filter((a) => a.mode === 'existing')
     .map((a) => a.existingId)
@@ -189,7 +198,6 @@ export function FundingForm({
     (a) => !usedExistingIds.includes(a.id),
   );
 
-  // ── Compteur d'activités pour le badge ────────────────────────────────────
   const activityCount = activities.length;
 
   return (
@@ -199,7 +207,6 @@ export function FundingForm({
       loading={loading}
       submitButtonText={initialData ? 'Mettre à jour' : 'Créer'}
     >
-      {/* ── Informations générales ─────────────────────────────────────── */}
       <FormInput
         control={form.control}
         name="name"
@@ -214,7 +221,6 @@ export function FundingForm({
         description="Optionnel — apparaîtra dans le tableau"
       />
 
-      {/* ── Montants : deux colonnes ───────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4">
         <FormInput
           control={form.control}
@@ -231,7 +237,6 @@ export function FundingForm({
         />
       </div>
 
-      {/* Montant en Euro — champ manuel, pas de calcul automatique */}
       <FormInput
         control={form.control}
         name="amountInEuro"
@@ -241,7 +246,6 @@ export function FundingForm({
         description="Saisir manuellement l'équivalent en Euro"
       />
 
-      {/* ── Dates ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4">
         <FormInput
           control={form.control}
@@ -257,7 +261,6 @@ export function FundingForm({
         />
       </div>
 
-      {/* ── Bailleurs ─────────────────────────────────────────────────── */}
       <FormMultiSelect
         control={form.control}
         name="funders"
@@ -270,7 +273,6 @@ export function FundingForm({
         }))}
       />
 
-      {/* ── Aires protégées ───────────────────────────────────────────── */}
       <FormMultiSelect
         control={form.control}
         name="protectedAreaIds"
@@ -283,9 +285,8 @@ export function FundingForm({
         }))}
       />
 
-      {/* ── Section Activités ──────────────────────────────────────────── */}
+      {/* ── Section Activités ── */}
       <div className="border border-border rounded-lg overflow-hidden">
-        {/* En-tête cliquable pour déplier/replier */}
         <button
           type="button"
           onClick={() => setActivitiesOpen((v) => !v)}
@@ -311,7 +312,6 @@ export function FundingForm({
 
         {activitiesOpen && (
           <div className="p-4 space-y-3">
-            {/* Liste des activités */}
             {activities.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-2">
                 Aucune activité ajoutée. Utilisez les boutons ci-dessous.
@@ -330,7 +330,6 @@ export function FundingForm({
               />
             ))}
 
-            {/* Boutons d'ajout */}
             <div className="flex gap-2 pt-1">
               <Button
                 type="button"
@@ -361,7 +360,7 @@ export function FundingForm({
   );
 }
 
-// ─── Sous-composant : une ligne d'activité ───────────────────────────────────
+// ─── ActivityRow ──────────────────────────────────────────────────────────────
 
 interface ActivityRowProps {
   index: number;
@@ -373,31 +372,25 @@ interface ActivityRowProps {
 }
 
 function ActivityRow({
-  index,
   entry,
   availableActivities,
   allActivities,
   onChange,
   onRemove,
 }: ActivityRowProps) {
-  // Lorsqu'on sélectionne une activité existante, pré-remplir titre/description
   const handleExistingSelect = (id: string) => {
     const found = allActivities.find((a) => a.id === id);
-    onChange({
-      existingId: id,
-      title: found?.title,
-    });
+    onChange({ existingId: id, title: found?.title });
   };
 
   return (
     <div className="relative border border-border rounded-md p-3 space-y-2 bg-background">
-      {/* Badge mode + bouton supprimer */}
       <div className="flex items-center justify-between gap-2">
         <span
           className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
             entry.mode === 'new'
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'bg-blue-100 text-blue-700'
           }`}
         >
           {entry.mode === 'new' ? (
@@ -413,15 +406,13 @@ function ActivityRow({
         <button
           type="button"
           onClick={onRemove}
-          className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-600 transition-colors"
-          aria-label="Supprimer cette activité"
+          className="p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-colors"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {entry.mode === 'existing' ? (
-        /* ── Sélecteur d'activité existante ──────────────────────── */
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground">
             Activité à lier
@@ -432,7 +423,6 @@ function ActivityRow({
             className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">— Choisir une activité —</option>
-            {/* Inclure l'activité déjà sélectionnée même si elle n'est plus dispo */}
             {entry.existingId &&
               !availableActivities.find((a) => a.id === entry.existingId) && (
                 <option value={entry.existingId}>{entry.title}</option>
@@ -443,7 +433,6 @@ function ActivityRow({
               </option>
             ))}
           </select>
-          {/* Afficher la description en lecture seule */}
           {entry.description && (
             <p className="text-xs text-muted-foreground italic px-1">
               {entry.description}
@@ -451,7 +440,6 @@ function ActivityRow({
           )}
         </div>
       ) : (
-        /* ── Nouvelle activité : saisie libre ────────────────────── */
         <div className="space-y-2">
           <div>
             <label className="text-xs font-medium text-muted-foreground">

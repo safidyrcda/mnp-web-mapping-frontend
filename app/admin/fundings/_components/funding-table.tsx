@@ -497,7 +497,26 @@ export function FundingTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onEdit(funding)}
+                      onClick={() =>
+                        onEdit({
+                          id: funding.id,
+                          name: funding.name,
+                          description: funding.description,
+                          amount: funding.amount,
+                          currency: funding.currency,
+                          debut: funding.debut,
+                          end: funding.end,
+                          projectId: funding.project?.id,
+                          protectedAreaIds:
+                            funding.protectedAreaFundings
+                              ?.map((paf) => paf.protectedArea?.id ?? '')
+                              .filter(Boolean) ?? [],
+                          funders:
+                            funding.funderFundings
+                              ?.map((ff) => ff.funder?.id ?? '')
+                              .filter(Boolean) ?? [],
+                        })
+                      }
                       className="w-8 h-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                     >
                       <Pencil className="w-3.5 h-3.5" />

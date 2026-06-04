@@ -5,12 +5,13 @@ import {
   getProtectedAreaDetail,
   ProtectedAreaDetail,
   FundingDetail,
+  FunderInFunding,
 } from '@/app/api/manage-data';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, ArrowLeft, Leaf } from 'lucide-react';
+import { ArrowLeft, Leaf } from 'lucide-react';
 import { toast } from 'sonner';
 
-// ─── Palette nature ──────────────────────────────────────────────────────────
+// ─── Palette ─────────────────────────────────────────────────────────────────
 
 const colors = {
   green: {
@@ -38,10 +39,33 @@ const colors = {
   },
 };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+const FUNDER_TYPE_STYLES = {
+  funder: {
+    bg: '#eff6ff',
+    text: '#1d4ed8',
+    border: '#bfdbfe',
+    label: 'Bailleurs',
+  },
+  technical_partner: {
+    bg: '#f0fdf4',
+    text: '#15803d',
+    border: '#86efac',
+    label: 'Partenaires techniques',
+  },
+  strategical_partner: {
+    bg: '#fdf4ff',
+    text: '#7e22ce',
+    border: '#e9d5ff',
+    label: 'Partenaires stratégiques',
+  },
+} as const;
+
+type FunderType = keyof typeof FUNDER_TYPE_STYLES;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n?: number | null, currency?: string | null) => {
-  if (n === null || n === undefined) return '—';
+  if (n == null) return '—';
   const s = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(
     n,
   );
@@ -57,21 +81,22 @@ const fmtDate = (d?: string | null) => {
 };
 
 const duration = (debut?: string | null, end?: string | null) => {
-  if (!debut || !end) return '—';
-  const ms = new Date(end).getTime() - new Date(debut).getTime();
-  const months = Math.round(ms / (1000 * 60 * 60 * 24 * 30.44));
+  if (!debut || !end) return null;
+  const months = Math.round(
+    (new Date(end).getTime() - new Date(debut).getTime()) /
+      (1000 * 60 * 60 * 24 * 30.44),
+  );
   if (months < 12) return `${months} mois`;
-  const y = Math.floor(months / 12);
-  const m = months % 12;
+  const y = Math.floor(months / 12),
+    m = months % 12;
   return m > 0
     ? `${y} an${y > 1 ? 's' : ''} ${m} mois`
     : `${y} an${y > 1 ? 's' : ''}`;
 };
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── StatCard ─────────────────────────────────────────────────────────────────
 
 type StatVariant = 'green' | 'teal' | 'amber';
-
 const statStyles: Record<
   StatVariant,
   { bg: string; label: string; value: string; sub: string }
@@ -131,127 +156,219 @@ function StatCard({
   );
 }
 
+// ─── FunderGroup ──────────────────────────────────────────────────────────────
+
+function FunderGroup({
+  type,
+  funders,
+}: {
+  type: FunderType;
+  funders: FunderInFunding[];
+}) {
+  if (funders.length === 0) return null;
+  const s = FUNDER_TYPE_STYLES[type];
+  return (
+    <div>
+      <p
+        className="text-[10px] uppercase tracking-widest font-bold mb-1.5"
+        style={{ color: s.text }}
+      >
+        {s.label} ({funders.length})
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {funders.map((f) => (
+          <span
+            key={f.id}
+            title={f.fullname ?? undefined}
+            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+            style={{
+              background: s.bg,
+              color: s.text,
+              border: `1px solid ${s.border}`,
+            }}
+          >
+            {f.name}
+            {f.fullname && (
+              <span className="ml-1 opacity-60 font-normal">
+                · {f.fullname}
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── FundingCard ──────────────────────────────────────────────────────────────
+
 function FundingCard({ funding }: { funding: FundingDetail }) {
-  const hasOtherAreas = funding.otherProtectedAreas.length > 0;
+  const dur = duration(funding.debut, funding.end);
+
+  const hasGlobalAmount =
+    funding.globalAmount != null &&
+    (funding.globalAmount !== funding.paAmount ||
+      funding.globalCurrency !== funding.paCurrency);
+
+  const fundersByType = {
+    funder: funding.funders.filter((f) => !f.type || f.type === 'funder'),
+    technical_partner: funding.funders.filter(
+      (f) => f.type === 'technical_partner',
+    ),
+    strategical_partner: funding.funders.filter(
+      (f) => f.type === 'strategical_partner',
+    ),
+  };
+
+  const hasAnyFunder = funding.funders.length > 0;
 
   return (
     <div
       className="rounded-xl overflow-hidden"
-      style={{
-        border: `0.5px solid ${colors.green[100]}`,
-      }}
+      style={{ border: `0.5px solid ${colors.green[100]}` }}
     >
-      {/* Header */}
+      {/* ── Header ── */}
       <div
-        className="flex items-start justify-between gap-4 px-4 py-3.5"
+        className="px-4 py-3.5"
         style={{
           backgroundColor: colors.green[50],
           borderBottom: `0.5px solid ${colors.green[100]}`,
         }}
       >
-        <div className="min-w-0">
-          <h3
-            className="font-medium text-sm leading-snug"
-            style={{ color: colors.green[900] }}
-          >
-            {funding.name || (
-              <span className="italic" style={{ color: colors.teal[600] }}>
-                Sans nom
-              </span>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h3
+              className="font-semibold text-sm leading-snug"
+              style={{ color: colors.green[900] }}
+            >
+              {funding.name || (
+                <span className="italic" style={{ color: colors.teal[600] }}>
+                  Sans nom
+                </span>
+              )}
+            </h3>
+            <p className="text-xs mt-1" style={{ color: colors.teal[600] }}>
+              {fmtDate(funding.debut)} → {fmtDate(funding.end)}
+              {dur && (
+                <span
+                  className="font-medium"
+                  style={{ color: colors.green[800] }}
+                >
+                  {' '}
+                  · {dur}
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/* ── Montants ── */}
+          <div className="text-right shrink-0 space-y-1">
+            {/* Montant PA (principal) */}
+            {funding.paAmount != null ? (
+              <>
+                <p
+                  className="text-base font-semibold"
+                  style={{ color: colors.green[800] }}
+                >
+                  {fmt(funding.paAmount, funding.paCurrency)}
+                </p>
+                {funding.paAmountInEuro != null &&
+                  funding.paCurrency !== 'EUR' && (
+                    <p className="text-xs" style={{ color: colors.teal[600] }}>
+                      ≈ {fmt(funding.paAmountInEuro, 'EUR')}
+                    </p>
+                  )}
+                {/* Montant global en plus petit si différent */}
+                {hasGlobalAmount && (
+                  <p
+                    className="text-[10px] mt-0.5"
+                    style={{
+                      color: colors.teal[600],
+                      borderTop: `0.5px solid ${colors.green[100]}`,
+                      paddingTop: 3,
+                    }}
+                  >
+                    Total des financements de toutes les AP concernées :{' '}
+                    {fmt(funding.globalAmount, funding.globalCurrency)}
+                    {funding.globalAmountInEuro != null &&
+                      funding.globalCurrency !== 'EUR' && (
+                        <span> · {fmt(funding.globalAmountInEuro, 'EUR')}</span>
+                      )}
+                  </p>
+                )}
+              </>
+            ) : (
+              /* Pas de montant PA défini → afficher le global */
+              funding.globalAmount != null && (
+                <div>
+                  <p
+                    className="text-base font-semibold"
+                    style={{ color: colors.green[800] }}
+                  >
+                    {fmt(funding.globalAmount, funding.globalCurrency)}
+                  </p>
+                  {funding.globalAmountInEuro != null && (
+                    <p className="text-xs" style={{ color: colors.teal[600] }}>
+                      ≈ {fmt(funding.globalAmountInEuro, 'EUR')}
+                    </p>
+                  )}
+                  <p
+                    className="text-[10px] mt-0.5 italic"
+                    style={{ color: colors.amber[600] }}
+                  >
+                    montant global — non ventilé par AP
+                  </p>
+                </div>
+              )
             )}
-          </h3>
-          <p className="text-xs mt-1" style={{ color: colors.teal[600] }}>
-            {fmtDate(funding.debut)} → {fmtDate(funding.end)}
-            {' · '}
-            <span className="font-medium" style={{ color: colors.green[800] }}>
-              {duration(funding.debut, funding.end)}
-            </span>
-          </p>
-        </div>
-        <div className="text-right shrink-0">
-          <p
-            className="text-base font-semibold"
-            style={{ color: colors.green[800] }}
-          >
-            {fmt(funding.amount, funding.currency)}
-          </p>
-          <p className="text-[11px] mt-0.5" style={{ color: colors.teal[600] }}>
-            montant total
-          </p>
+          </div>
         </div>
       </div>
 
+      {/* ── Corps ── */}
       <div className="px-4 py-3.5 space-y-3">
-        {/* Bailleurs */}
-        {funding.funders.length > 0 && (
-          <div>
-            <p
-              className="text-[11px] uppercase tracking-widest font-medium mb-2"
-              style={{ color: colors.teal[600] }}
-            >
-              Bailleur{funding.funders.length > 1 ? 's' : ''}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {funding.funders.map((f) => (
-                <span
-                  key={f.id}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs"
-                  style={{
-                    border: `0.5px solid ${colors.teal[200]}`,
-                    backgroundColor: colors.teal[50],
-                  }}
-                  title={f.fullname ?? undefined}
-                >
-                  <span
-                    className="font-medium"
-                    style={{ color: colors.teal[800] }}
-                  >
-                    {f.name}
-                  </span>
-                  {f.fullname && (
-                    <span style={{ color: colors.teal[600] }}>
-                      · {f.fullname}
-                    </span>
-                  )}
-                </span>
-              ))}
-            </div>
+        {/* Bailleurs groupés par type */}
+        {hasAnyFunder && (
+          <div className="space-y-2.5">
+            {(
+              [
+                'funder',
+                'technical_partner',
+                'strategical_partner',
+              ] as FunderType[]
+            ).map((type) => (
+              <FunderGroup
+                key={type}
+                type={type}
+                funders={fundersByType[type]}
+              />
+            ))}
           </div>
         )}
 
-        {/* Avertissement multi-AP */}
-        {hasOtherAreas && (
-          <div
-            className="flex gap-2 rounded-lg p-3"
-            style={{
-              backgroundColor: colors.amber[50],
-              border: `0.5px solid ${colors.amber[200]}`,
-            }}
-          >
-            <AlertTriangle
-              className="w-4 h-4 shrink-0 mt-0.5"
-              style={{ color: colors.amber[800] }}
-            />
-            <div className="text-xs" style={{ color: colors.amber[800] }}>
-              <p className="font-semibold mb-1.5">
-                Ce financement concerne plusieurs aires protégées — les montants
-                sont partagés.
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {funding.otherProtectedAreas.map((pa) => (
-                  <span
-                    key={pa.id}
-                    className="px-2 py-0.5 rounded-full font-medium text-[11px]"
-                    style={{
-                      backgroundColor: colors.amber[100],
-                      border: `0.5px solid ${colors.amber[200]}`,
-                      color: colors.amber[800],
-                    }}
-                  >
-                    {pa.sigle} – {pa.name}
-                  </span>
-                ))}
-              </div>
+        {/* Autres APs — simple liste discrète, sans warning */}
+        {funding.otherProtectedAreas.length > 0 && (
+          <div>
+            <p
+              className="text-[10px] uppercase tracking-widest font-bold mb-1.5"
+              style={{ color: colors.teal[600] }}
+            >
+              Autres aires protégées concernées
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {funding.otherProtectedAreas.map((pa) => (
+                <span
+                  key={pa.id}
+                  className="px-2 py-0.5 rounded-full text-[11px] font-medium"
+                  style={{
+                    backgroundColor: colors.teal[50],
+                    border: `0.5px solid ${colors.teal[200]}`,
+                    color: colors.teal[800],
+                  }}
+                >
+                  {pa.sigle} – {pa.name}
+                </span>
+              ))}
             </div>
           </div>
         )}
@@ -260,7 +377,7 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
   );
 }
 
-// ─── Page principale ─────────────────────────────────────────────────────────
+// ─── Page principale ──────────────────────────────────────────────────────────
 
 export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
   const router = useRouter();
@@ -300,7 +417,18 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
     ).values(),
   );
 
-  const totalBudget = data.fundings.reduce((s, f) => s + (f.amount ?? 0), 0);
+  const fundersByType = {
+    funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
+    technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
+    strategical_partner: allFunders.filter(
+      (f) => f.type === 'strategical_partner',
+    ),
+  };
+
+  const totalPaEuro = data.fundings.reduce(
+    (s, f) => s + (f.paAmountInEuro ?? f.globalAmountInEuro ?? 0),
+    0,
+  );
 
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 space-y-4">
@@ -312,16 +440,14 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
         onMouseEnter={(e) => (e.currentTarget.style.color = colors.teal[800])}
         onMouseLeave={(e) => (e.currentTarget.style.color = colors.teal[600])}
       >
-        <ArrowLeft className="w-4 h-4" />
-        Retour
+        <ArrowLeft className="w-4 h-4" /> Retour
       </button>
 
-      {/* Grand card principal */}
       <div
         className="rounded-2xl overflow-hidden shadow-sm"
         style={{ border: `0.5px solid ${colors.green[100]}` }}
       >
-        {/* Hero */}
+        {/* ── Hero ── */}
         <div
           className="px-6 py-5 flex items-start justify-between gap-4"
           style={{
@@ -329,7 +455,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
           }}
         >
           <div className="space-y-1.5">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <Leaf
                 className="w-5 h-5 opacity-70"
                 style={{ color: colors.green[100] }}
@@ -352,12 +478,54 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
                   {data.status}
                 </span>
               )}
+              {data.creationYear && (
+                <span
+                  className="text-[11px]"
+                  style={{ color: 'rgba(255,255,255,0.6)' }}
+                >
+                  Créée en {data.creationYear}
+                </span>
+              )}
             </div>
             <p className="text-sm" style={{ color: colors.teal[100] }}>
               {data.name}
             </p>
+
+            {/* Localisation */}
+            {(data.region?.length ||
+              data.districts?.length ||
+              data.communes?.length) && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {data.region?.map((r) => (
+                  <span
+                    key={r}
+                    className="text-[11px] px-2 py-0.5 rounded-full font-medium"
+                    style={{
+                      background: 'rgba(255,255,255,0.15)',
+                      color: colors.green[100],
+                    }}
+                  >
+                    {r}
+                  </span>
+                ))}
+                {data.districts?.map((d) => (
+                  <span
+                    key={d}
+                    className="text-[11px] px-2 py-0.5 rounded-full"
+                    style={{
+                      background: 'rgba(255,255,255,0.10)',
+                      color: 'rgba(255,255,255,0.75)',
+                    }}
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-          {data.size && (
+
+          {/* Superficie */}
+          {(data.size || data.superficie) && (
             <div className="text-right shrink-0">
               <p
                 className="text-xl font-semibold"
@@ -365,7 +533,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
               >
                 {new Intl.NumberFormat('fr-FR', {
                   maximumFractionDigits: 0,
-                }).format(data.size)}{' '}
+                }).format(data.superficie ?? data.size ?? 0)}{' '}
                 ha
               </p>
               <p
@@ -378,7 +546,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
           )}
         </div>
 
-        {/* Corps */}
+        {/* ── Corps ── */}
         <div className="px-6 py-5 space-y-6">
           {/* Vue d'ensemble */}
           <div>
@@ -386,30 +554,80 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
               className="text-[11px] uppercase tracking-widest font-medium mb-3"
               style={{ color: colors.teal[600] }}
             >
-              {`Vue d'ensemble`}
+              {"Vue d'ensemble"}
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               <StatCard
                 label="Financements"
                 value={String(data.fundings.length)}
                 variant="green"
               />
               <StatCard
-                label="Partenaires / Bailleurs"
+                label="Partenaires"
                 value={String(allFunders.length)}
                 sub={allFunders.map((f) => f.name).join(', ')}
                 variant="teal"
               />
+              {totalPaEuro > 0 && (
+                <StatCard
+                  label="Budget total (€)"
+                  value={fmt(totalPaEuro, 'EUR')}
+                  variant="amber"
+                />
+              )}
+              {data.populationCount != null && (
+                <StatCard
+                  label="Population"
+                  value={data.populationCount.toLocaleString('fr-FR')}
+                  variant="teal"
+                />
+              )}
+              {(data.femaleClpNumber != null || data.maleClpNumber != null) && (
+                <StatCard
+                  label="Membres CLP"
+                  value={(
+                    (data.femaleClpNumber ?? 0) + (data.maleClpNumber ?? 0)
+                  ).toLocaleString('fr-FR')}
+                  sub={`${data.femaleClpNumber ?? 0}F · ${data.maleClpNumber ?? 0}H`}
+                  variant="green"
+                />
+              )}
             </div>
           </div>
 
-          {/* Séparateur */}
+          {/* Bailleurs globaux groupés */}
+          {allFunders.length > 0 && (
+            <div>
+              <p
+                className="text-[11px] uppercase tracking-widest font-medium mb-3"
+                style={{ color: colors.teal[600] }}
+              >
+                Bailleurs & Partenaires
+              </p>
+              <div className="space-y-2.5">
+                {(
+                  [
+                    'funder',
+                    'technical_partner',
+                    'strategical_partner',
+                  ] as FunderType[]
+                ).map((type) => (
+                  <FunderGroup
+                    key={type}
+                    type={type}
+                    funders={fundersByType[type]}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div
             className="border-t"
             style={{ borderColor: colors.green[100] }}
           />
 
-          {/* Liste des financements */}
+          {/* Financements */}
           <div>
             <p
               className="text-[11px] uppercase tracking-widest font-medium mb-3"
@@ -417,7 +635,6 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
             >
               Financements ({data.fundings.length})
             </p>
-
             {data.fundings.length === 0 ? (
               <div
                 className="rounded-xl border-dashed py-12 text-center text-sm"

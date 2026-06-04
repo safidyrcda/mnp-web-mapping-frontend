@@ -35,8 +35,11 @@ import {
   saveFunderFundings,
   saveProtectedAreaFundings,
 } from '@/app/api/fundings/get-fundings-by-ap.api';
+import { useRouter } from 'next/navigation';
 
 export function FundingPage() {
+  const router = useRouter();
+
   const [fundings, setFundings] = useState<GetFundingsDTO>([]);
   const [funders, setFunders] = useState<Funder[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -330,24 +333,43 @@ export function FundingPage() {
             )}
           </p>
         </div>
-        <Button
-          onClick={handleCreateClick}
-          style={{
-            background: 'linear-gradient(135deg, #1e3a5f 0%, #1e4976 100%)',
-            border: 'none',
-            borderRadius: 10,
-            padding: '10px 20px',
-            fontWeight: 600,
-            fontSize: 13,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            boxShadow: '0 2px 8px rgba(30,58,95,0.25)',
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          Nouveau financement
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            onClick={() => router.push('/admin/protected-areas')}
+            style={{
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #1e4976 100%)',
+              border: 'none',
+              borderRadius: 10,
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: '0 2px 8px rgba(30,58,95,0.25)',
+            }}
+          >
+            Gerer les aires protégées
+          </Button>
+          <Button
+            onClick={handleCreateClick}
+            style={{
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #1e4976 100%)',
+              border: 'none',
+              borderRadius: 10,
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: '0 2px 8px rgba(30,58,95,0.25)',
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            Nouveau financement
+          </Button>
+        </div>
       </div>
 
       {/* ── Bloc filtres ───────────────────────────────────────────────────── */}

@@ -16,8 +16,11 @@ import {
 import { toast } from 'sonner';
 import { ProtectedAreaForm } from './protected-area-form';
 import { updateProtectedArea } from '@/app/api/protected-areas/ap-api';
+import { useRouter } from 'next/navigation';
 
 export function ProtectedAreaPage() {
+  const router = useRouter();
+
   const [protectedAreas, setProtectedAreas] = useState<ProtectedArea[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -119,30 +122,51 @@ export function ProtectedAreaPage() {
 
   return (
     <div className="space-y-5">
-      {/* En-tête */}
-      <div>
-        <h1
-          style={{
-            fontSize: 26,
-            fontWeight: 800,
-            color: '#0f172a',
-            letterSpacing: '-0.02em',
-            lineHeight: 1.2,
-          }}
-        >
-          Aires protégées
-        </h1>
-        <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>
-          {filtered.length} aire{filtered.length !== 1 ? 's' : ''} protégée
-          {filtered.length !== 1 ? 's' : ''}
-          {activeFiltersCount > 0 && (
-            <span style={{ color: '#1e4976', fontWeight: 600 }}>
-              {' '}
-              · {activeFiltersCount} filtre{activeFiltersCount > 1 ? 's' : ''}{' '}
-              actif{activeFiltersCount > 1 ? 's' : ''}
-            </span>
-          )}
-        </p>
+      <div className="flex justify-between items-start gap-4 flex-wrap">
+        {/* En-tête */}
+        <div>
+          <h1
+            style={{
+              fontSize: 26,
+              fontWeight: 800,
+              color: '#0f172a',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.2,
+            }}
+          >
+            Aires protégées
+          </h1>
+          <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>
+            {filtered.length} aire{filtered.length !== 1 ? 's' : ''} protégée
+            {filtered.length !== 1 ? 's' : ''}
+            {activeFiltersCount > 0 && (
+              <span style={{ color: '#1e4976', fontWeight: 600 }}>
+                {' '}
+                · {activeFiltersCount} filtre{activeFiltersCount > 1 ? 's' : ''}{' '}
+                actif{activeFiltersCount > 1 ? 's' : ''}
+              </span>
+            )}
+          </p>
+        </div>
+        <div>
+          <Button
+            onClick={() => router.push('/admin/fundings')}
+            style={{
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #1e4976 100%)',
+              border: 'none',
+              borderRadius: 10,
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: '0 2px 8px rgba(30,58,95,0.25)',
+            }}
+          >
+            Gerer les finacements
+          </Button>
+        </div>
       </div>
 
       {/* Filtres */}

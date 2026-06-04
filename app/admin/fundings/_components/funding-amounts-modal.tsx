@@ -229,7 +229,7 @@ export function FundingAmountsModal({
                         <Pencil size={11} />
                         {isEditing ? 'Replier' : 'Modifier'}
                       </button>
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => removeEntry(i)}
                         style={{
@@ -255,7 +255,7 @@ export function FundingAmountsModal({
                         }}
                       >
                         <Trash2 size={13} />
-                      </button>
+                      </button> */}
                     </div>
                   </div>
 
@@ -375,7 +375,7 @@ export function FundingAmountsModal({
               );
             })}
 
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               size="sm"
@@ -384,7 +384,7 @@ export function FundingAmountsModal({
             >
               <Plus className="w-4 h-4" />
               Ajouter une aire protégée
-            </Button>
+            </Button> */}
 
             <div className="flex justify-end gap-3 pt-2 border-t border-border">
               <Button
