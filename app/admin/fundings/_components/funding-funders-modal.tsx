@@ -5,12 +5,7 @@ import { BaseModal } from '@/components/modals/base-modal';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus } from 'lucide-react';
 import type { Funder } from '@/lib/schemas';
-
-export enum FunderFundingType {
-  FUNDER = 'funder',
-  TECHNICAL_PARTNER = 'technical_partner',
-  STRATEGICAL_PARTNER = 'strategical_partner',
-}
+import { FunderFundingType } from '@/app/api/fundings/get-fundings-by-ap.api';
 
 const TYPE_LABELS: Record<FunderFundingType, string> = {
   [FunderFundingType.FUNDER]: 'Bailleur',
