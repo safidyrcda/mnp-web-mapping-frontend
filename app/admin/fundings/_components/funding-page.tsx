@@ -27,6 +27,14 @@ import { Button } from '@/components/ui/button';
 import { Plus, Search, X, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { DisbursementForm } from '../[id]/_components/disbursement-form';
+import { FundingAmountsModal } from './funding-amounts-modal';
+import { FundingFundersModal } from './funding-funders-modal';
+import {
+  fetchFundersByFunding,
+  fetchProtectedAreaFundings,
+  saveFunderFundings,
+  saveProtectedAreaFundings,
+} from '@/app/api/fundings/get-fundings-by-ap.api';
 
 export function FundingPage() {
   const [fundings, setFundings] = useState<GetFundingsDTO>([]);
@@ -53,7 +61,25 @@ export function FundingPage() {
   const [disbursementFundingId, setDisbursementFundingId] = useState<
     string | null
   >(null);
+  const [isAmountsOpen, setIsAmountsOpen] = useState(false);
+  const [isFundersOpen, setIsFundersOpen] = useState(false);
+  const [selectedFundingForAmounts, setSelectedFundingForAmounts] = useState<
+    GetFundingsDTO[number] | null
+  >(null);
+  const [selectedFundingForFunders, setSelectedFundingForFunders] = useState<
+    GetFundingsDTO[number] | null
+  >(null);
 
+  // Ajouter les handlers
+  const handleManageAmounts = (funding: GetFundingsDTO[number]) => {
+    setSelectedFundingForAmounts(funding);
+    setIsAmountsOpen(true);
+  };
+
+  const handleManageFunders = (funding: GetFundingsDTO[number]) => {
+    setSelectedFundingForFunders(funding);
+    setIsFundersOpen(true);
+  };
   useEffect(() => {
     loadData();
   }, []);
@@ -683,6 +709,8 @@ export function FundingPage() {
           onEdit={handleEditClick}
           onDelete={handleDeleteClick}
           onAddDisbursement={handleAddDisbursement}
+          onManageAmounts={handleManageAmounts}
+          onManageFunders={handleManageFunders}
         />
       )}
 
@@ -715,6 +743,27 @@ export function FundingPage() {
           loading={isLoading}
         />
       </BaseModal>
+
+      <FundingAmountsModal
+        open={isAmountsOpen}
+        onOpenChange={setIsAmountsOpen}
+        fundingId={selectedFundingForAmounts?.id ?? ''}
+        fundingName={selectedFundingForAmounts?.name}
+        protectedAreas={protectedAreas}
+        defaultProtectedAreaId={filterProtectedArea || undefined} // ← AP du filtre actif
+        onLoad={(id) => fetchProtectedAreaFundings(id)} // à implémenter côté API
+        onSave={(id, entries) => saveProtectedAreaFundings(id, entries)}
+      />
+
+      <FundingFundersModal
+        open={isFundersOpen}
+        onOpenChange={setIsFundersOpen}
+        fundingId={selectedFundingForFunders?.id ?? ''}
+        fundingName={selectedFundingForFunders?.name}
+        funders={funders}
+        onLoad={(id) => fetchFundersByFunding(id)} // déjà existant
+        onSave={(id, entries) => saveFunderFundings(id, entries)}
+      />
 
       <ConfirmModal
         open={isDeleteOpen}

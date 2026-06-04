@@ -2,7 +2,14 @@
 
 import { Funding, Funder, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, PlusCircle } from 'lucide-react';
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  PlusCircle,
+  DollarSign,
+  Users,
+} from 'lucide-react';
 import { GetFundingsDTO } from '@/app/api/manage-data';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +21,8 @@ interface FundingTableProps {
   onEdit: (funding: Funding) => void;
   onDelete: (funding: Funding) => void;
   onAddDisbursement: (fundingId: string) => void;
+  onManageAmounts: (funding: GetFundingsDTO[number]) => void;
+  onManageFunders: (funding: GetFundingsDTO[number]) => void;
 }
 
 export function FundingTable({
@@ -21,6 +30,8 @@ export function FundingTable({
   onEdit,
   onDelete,
   onAddDisbursement,
+  onManageAmounts,
+  onManageFunders,
 }: FundingTableProps) {
   const router = useRouter();
 
@@ -453,76 +464,54 @@ export function FundingTable({
                 <td
                   className="sticky right-0"
                   style={{
-                    padding: '12px 16px',
+                    background: rowBg,
                     borderBottom: '1px solid #e2e8f0',
-                    borderLeft: '1px solid #e2e8f0',
-                    background: isEven ? '#ffffff' : '#f8fafc',
+                    padding: '12px 16px',
                     verticalAlign: 'top',
                   }}
                 >
                   <div className="flex justify-end gap-1.5">
-                    {/* <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onAddDisbursement(funding.id)}
-                      className="w-8 h-8 p-0 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200"
-                      title="Ajouter un décaissement"
-                    >
-                      <PlusCircle className="w-3.5 h-3.5" />
-                    </Button> */}
-
+                    {/* 🆕 Montants par AP */}
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        onEdit({
-                          id: funding.id,
-                          name: funding.name,
-                          amount: funding.amount,
-                          currency: funding.currency,
-                          debut: funding.debut,
-                          end: funding.end,
-                          projectId: funding.project?.id,
-                          protectedAreaIds:
-                            funding.protectedAreaFundings?.map(
-                              (paf) => paf.protectedArea?.id ?? '',
-                            ) ?? [],
-                          funders:
-                            funding.funderFundings?.map(
-                              (ff) => ff.funder?.id ?? '',
-                            ) ?? [],
-                        })
-                      }
+                      onClick={() => onManageAmounts(funding)}
+                      className="w-8 h-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200"
+                      title="Gérer les montants par aire protégée"
+                    >
+                      <DollarSign className="w-3.5 h-3.5" />
+                    </Button>
+
+                    {/* 🆕 Bailleurs / partenaires */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onManageFunders(funding)}
+                      className="w-8 h-8 p-0 text-violet-600 hover:text-violet-700 hover:bg-violet-50 border-violet-200"
+                      title="Gérer les bailleurs et partenaires"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                    </Button>
+
+                    {/* existant : édition */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onEdit(funding)}
                       className="w-8 h-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
 
+                    {/* existant : suppression */}
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        onDelete({
-                          id: funding.id,
-                          name: funding.name,
-                          projectId: funding.project?.id,
-                        })
-                      }
+                      onClick={() => onDelete(funding)}
                       className="w-8 h-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
-
-                    {/* <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        router.push(`/admin/fundings/${funding.id}`)
-                      }
-                      className="w-8 h-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </Button> */}
                   </div>
                 </td>
               </tr>
