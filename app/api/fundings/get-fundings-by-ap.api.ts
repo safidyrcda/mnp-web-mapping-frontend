@@ -8,9 +8,9 @@ export interface CreateProtectedAreaFundingDto {
 }
 
 export enum FunderFundingType {
-  FUNDER = 'Bailleur',
-  TECHNICAL_PARTNER = 'Partenaire technique',
-  STRATEGICAL_PARTNER = 'Partenaire stratégique',
+  FUNDER = 'funder',
+  TECHNICAL_PARTNER = 'technical_partner',
+  STRATEGICAL_PARTNER = 'strategical_partner',
 }
 
 export interface CreateFunderFundingDto {

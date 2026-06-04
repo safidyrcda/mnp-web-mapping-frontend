@@ -48,17 +48,22 @@ export function FundingAmountsModal({
     setEditingIndex(null);
     setLoading(true);
     onLoad(fundingId)
-      .then((data) => {
-        if (data.length === 0) {
+      .then((data: any[]) => {
+        const normalized: PAAmountEntry[] = data.map((item) => ({
+          id: item.id,
+          protectedAreaId: item.protectedArea?.id ?? item.protectedAreaId ?? '',
+          amount: item.amount ?? undefined,
+          currency: item.currency ?? 'EUR',
+          amountInEuro: item.amountInEuro ?? undefined,
+        }));
+
+        if (normalized.length === 0) {
           setEntries([
-            {
-              protectedAreaId: defaultProtectedAreaId ?? '',
-              currency: 'EUR',
-            },
+            { protectedAreaId: defaultProtectedAreaId ?? '', currency: 'EUR' },
           ]);
-          setEditingIndex(0); // nouvelle entrée → mode édition direct
+          setEditingIndex(0);
         } else {
-          setEntries(data);
+          setEntries(normalized);
         }
       })
       .catch(console.error)
