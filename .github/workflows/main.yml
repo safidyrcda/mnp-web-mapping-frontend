@@ -2,16 +2,15 @@ name: Deploy Frontend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
   deploy:
-    runs-on: self-hosted   # ← utiliser ton runner self-hosted
+    runs-on: self-hosted # ← utiliser ton runner self-hosted
     steps:
       # 1️⃣ Récupérer le code
       - name: Checkout repository
         uses: actions/checkout@v3
-
 
       # 3️⃣ Build et déploiement
       - name: Build & Deploy Frontend
@@ -21,6 +20,5 @@ jobs:
           git reset --hard origin/main
           pnpm install
           pnpm run build
-          pm2 reload webmapping-frontend
+          pm2 reload webmap-frontend
           echo "Frontend déployé avec succès ! 🚀"
-
