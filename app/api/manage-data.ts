@@ -143,20 +143,18 @@ export type FundingDetail = {
   name?: string;
   debut?: string;
   end?: string;
-  // Montant global du financement (tous APs confondus)
   globalAmount?: number;
   globalCurrency?: string;
   globalAmountInEuro?: number;
-  // Montant spécifique à cette AP
   paAmount?: number;
   paCurrency?: string;
   paAmountInEuro?: number;
   totalDisbursed: number;
   totalDisbursedEuro: number;
   funders: FunderInFunding[];
+  activities: { id: string; title?: string; description?: string }[]; // ← nouveau
   otherProtectedAreas: { id: string; sigle: string; name: string }[];
 };
-
 export type ProtectedAreaDetail = {
   id: string;
   sigle: string;

@@ -205,6 +205,8 @@ function FunderGroup({
 function FundingCard({ funding }: { funding: FundingDetail }) {
   const dur = duration(funding.debut, funding.end);
 
+  console.log('FundingCard', funding);
+
   const hasGlobalAmount =
     funding.globalAmount != null &&
     (funding.globalAmount !== funding.paAmount ||
@@ -345,7 +347,49 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
             ))}
           </div>
         )}
-
+        {/* Activités liées au financement */}
+        {funding.activities?.length > 0 && (
+          <div>
+            <p
+              className="text-[10px] uppercase tracking-widest font-bold mb-1.5"
+              style={{ color: colors.teal[600] }}
+            >
+              Activités ({funding.activities.length})
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {funding.activities.map((activity, i) => {
+                const palette = [
+                  { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
+                  { bg: '#fdf4ff', text: '#7e22ce', border: '#e9d5ff' },
+                  { bg: '#f0fdfa', text: '#0f766e', border: '#99f6e4' },
+                  { bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' },
+                  { bg: '#fef9c3', text: '#854d0e', border: '#fde68a' },
+                ];
+                const c = palette[i % palette.length];
+                return (
+                  <div
+                    key={activity.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: '#f8faf8',
+                      borderRadius: 8,
+                      padding: '10px 14px',
+                      borderLeft: '3px solid #2d5a40',
+                      borderRight: `0.5px solid #2d5a40`,
+                      borderTop: `0.5px solid #2d5a40`,
+                      borderBottom: `0.5px solid #2d5a40`,
+                      fontSize: 13,
+                    }}
+                  >
+                    {activity.title ?? '(Sans titre)'}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {/* Autres APs — simple liste discrète, sans warning */}
         {funding.otherProtectedAreas.length > 0 && (
           <div>
@@ -353,9 +397,19 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
               className="text-[10px] uppercase tracking-widest font-bold mb-1.5"
               style={{ color: colors.teal[600] }}
             >
-              Autres aires protégées concernées
+              Le financement concerne{' '}
+              <span
+                className="font-bold"
+                style={{
+                  color: colors.amber[800],
+                  textDecoration: 'underline',
+                }}
+              >
+                {funding.otherProtectedAreas.length}
+              </span>{' '}
+              Autre(s) aire(s) protégée(s)
             </p>
-            <div className="flex flex-wrap gap-1.5">
+            {/* <div className="flex flex-wrap gap-1.5">
               {funding.otherProtectedAreas.map((pa) => (
                 <span
                   key={pa.id}
@@ -369,7 +423,7 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
                   {pa.sigle} – {pa.name}
                 </span>
               ))}
-            </div>
+            </div> */}
           </div>
         )}
       </div>
