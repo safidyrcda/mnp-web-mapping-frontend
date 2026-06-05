@@ -36,48 +36,112 @@ function PAAmountCell({
     return currency ? `${s} ${currency}` : s;
   };
 
+  // Aucun filtre AP actif → résumé global
   if (!filterProtectedArea) {
+    const totalAPs = funding.protectedAreaFundings?.length ?? 0;
+    const withAmounts =
+      funding.protectedAreaFundings?.filter(
+        (p) => p.amount != null || p.amountInEuro != null,
+      ).length ?? 0;
+
+    if (totalAPs === 0) {
+      return (
+        <span style={{ fontSize: 11, color: '#94a3b8', fontStyle: 'italic' }}>
+          Aucune AP liée
+        </span>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <span style={{ fontSize: 11, color: '#64748b' }}>
+          {totalAPs} AP{totalAPs > 1 ? 's' : ''} liée{totalAPs > 1 ? 's' : ''}
+        </span>
+        {withAmounts > 0 ? (
+          <span
+            style={{
+              fontSize: 10,
+              color: '#15803d',
+              background: '#f0fdf4',
+              border: '1px solid #86efac',
+              borderRadius: 99,
+              padding: '1px 7px',
+              fontWeight: 600,
+              width: 'fit-content',
+            }}
+          >
+            {withAmounts}/{totalAPs} ventilé{withAmounts > 1 ? 's' : ''}
+          </span>
+        ) : (
+          <span
+            style={{
+              fontSize: 10,
+              color: '#b45309',
+              background: '#fffbeb',
+              border: '1px solid #fcd34d',
+              borderRadius: 99,
+              padding: '1px 7px',
+              fontWeight: 600,
+              width: 'fit-content',
+            }}
+          >
+            Aucun montant ventilé
+          </span>
+        )}
+        <span style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic' }}>
+          Filtrez par AP pour le détail
+        </span>
+      </div>
+    );
+  }
+
+  // Filtre AP actif → montant spécifique
+  const paf = funding.protectedAreaFundings?.find(
+    (p) => p.protectedArea?.id === filterProtectedArea,
+  );
+
+  // Ce financement ne couvre pas l'AP filtrée
+  if (!paf) {
     return (
       <span
         style={{
           fontSize: 11,
           color: '#94a3b8',
-          fontStyle: 'italic',
-          lineHeight: '1.4',
-          display: 'block',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 6,
+          padding: '2px 8px',
+          display: 'inline-block',
         }}
       >
-        Sélectionner une AP pour voir son montant
+        Non concerné
       </span>
     );
   }
 
-  const paf = funding.protectedAreaFundings?.find(
-    (p) => p.protectedArea?.id === filterProtectedArea,
-  );
-
-  if (!paf) {
-    return <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>;
-  }
-
   const hasAmount = paf.amount != null || paf.amountInEuro != null;
 
+  // AP liée mais sans montant renseigné
   if (!hasAmount) {
     return (
       <span
         style={{
           fontSize: 11,
-          color: '#f59e0b',
-          fontStyle: 'italic',
-          display: 'block',
-          lineHeight: '1.4',
+          color: '#b45309',
+          background: '#fffbeb',
+          border: '1px solid #fcd34d',
+          borderRadius: 6,
+          padding: '2px 8px',
+          fontWeight: 600,
+          display: 'inline-block',
         }}
       >
-        Aucun montant ventilé pour cette AP
+        Montant non renseigné
       </span>
     );
   }
 
+  // Montant disponible
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {paf.amount != null && (
@@ -97,18 +161,20 @@ function PAAmountCell({
           {fmt(paf.amount, paf.currency)}
         </span>
       )}
-      {paf.amountInEuro != null && paf.currency !== 'EUR' && (
-        <span
-          style={{
-            fontSize: 11,
-            color: '#64748b',
-            paddingLeft: 2,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          ≈ {fmt(paf.amountInEuro, 'EUR')}
-        </span>
-      )}
+      {paf.amountInEuro != null &&
+        paf.currency !== 'EUR' &&
+        paf.amount != null && (
+          <span
+            style={{
+              fontSize: 11,
+              color: '#64748b',
+              paddingLeft: 2,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ≈ {fmt(paf.amountInEuro, 'EUR')}
+          </span>
+        )}
       {paf.amountInEuro != null &&
         (paf.currency === 'EUR' || paf.amount == null) && (
           <span
