@@ -11,6 +11,7 @@ interface FormWrapperProps<T extends FieldValues> {
   loading?: boolean;
   submitButtonText?: string;
   submitButtonVariant?: 'default' | 'outline' | 'secondary' | 'destructive';
+  forceEnabled?: boolean; // ← nouveau
 }
 
 export function FormWrapper<T extends FieldValues>({
@@ -20,6 +21,7 @@ export function FormWrapper<T extends FieldValues>({
   loading = false,
   submitButtonText = 'Soumettre',
   submitButtonVariant = 'default',
+  forceEnabled = false, // ← nouveau
 }: FormWrapperProps<T>) {
   return (
     <Form {...form}>
@@ -27,7 +29,7 @@ export function FormWrapper<T extends FieldValues>({
         {children}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (!form.formState.isDirty && !forceEnabled)}
           className={`w-full py-2.5 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed
             ${
               submitButtonVariant === 'default'

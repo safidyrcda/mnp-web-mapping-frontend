@@ -70,6 +70,7 @@ export const fundingSchema = z.object({
   end: z.coerce.date().optional().nullable(),
   amount: z.coerce.number().optional().nullable(),
   currency: z.string().optional().nullable(),
+  amountInEuro: z.number().nullable().optional(),
   funderFundings: z.array(funderFundingSchema).optional(),
   protectedAreaFundings: z.array(protectedAreaFundingSchema).optional(),
 });

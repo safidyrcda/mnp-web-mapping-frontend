@@ -72,17 +72,47 @@ export function FundingForm({
   const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [loadingActivities, setLoadingActivities] = useState(false);
 
+  const [activitiesDirty, setActivitiesDirty] = useState(false);
+
+  const addNewActivity = () => {
+    setActivities((prev) => [
+      ...prev,
+      { mode: 'new', title: '', description: '' },
+    ]);
+    setActivitiesOpen(true);
+    setActivitiesDirty(true); // ← ajouter
+  };
+
+  const addExistingActivity = () => {
+    setActivities((prev) => [...prev, { mode: 'existing', existingId: '' }]);
+    setActivitiesOpen(true);
+    setActivitiesDirty(true); // ← ajouter
+  };
+
+  const removeActivity = (index: number) => {
+    setActivities((prev) => prev.filter((_, i) => i !== index));
+    setActivitiesDirty(true); // ← ajouter
+  };
+
+  const updateActivity = (index: number, patch: Partial<ActivityEntry>) => {
+    setActivities((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)),
+    );
+    setActivitiesDirty(true); // ← ajouter
+  };
+
   // ── Reset complet du formulaire à chaque ouverture ────────────────────────
   useEffect(() => {
     const paIds = initialData?.protectedAreaIds?.filter(Boolean) ?? [];
 
+    // Dans le useEffect([initialData?.id]) — s'assurer que amountInEuro est présent
     form.reset({
       name: initialData?.name ?? '',
       debut: initialData?.debut,
       end: initialData?.end,
       currency: initialData?.currency,
       amount: initialData?.amount,
-      amountInEuro: (initialData as FundingFormValues)?.amountInEuro,
+      amountInEuro: (initialData as any)?.amountInEuro ?? null, // ← vérifier cette ligne
       funders: [],
       protectedAreaIds:
         paIds.length > 0
@@ -104,36 +134,27 @@ export function FundingForm({
 
   // ── Chargement des relations liées au financement ─────────────────────────
   useEffect(() => {
-    if (!initialData?.id) return;
+    const paIds = initialData?.protectedAreaIds?.filter(Boolean) ?? [];
 
-    // Bailleurs
-    fetchFundersByFunding(initialData.id)
-      .then((res: Funder[]) => {
-        form.setValue('funders', res.map((f) => f.id || '').filter(Boolean));
-      })
-      .catch(console.error);
+    form.reset({
+      name: initialData?.name ?? '',
+      debut: initialData?.debut,
+      end: initialData?.end,
+      currency: initialData?.currency,
+      amount: initialData?.amount,
+      amountInEuro: (initialData as any)?.amountInEuro ?? null, // ← ici
+      funders: [],
+      protectedAreaIds:
+        paIds.length > 0
+          ? paIds
+          : selectedProtectedArea
+            ? [selectedProtectedArea]
+            : [],
+    });
 
-    // APs — s'assurer qu'elles sont bien définies même si reset les a écrasées
-    const paIds = initialData.protectedAreaIds?.filter(Boolean) ?? [];
-    if (paIds.length > 0) {
-      form.setValue('protectedAreaIds', paIds);
-    }
-
-    // Activités
-    setLoadingActivities(true);
-    getActivitiesByFunding(initialData.id)
-      .then((linked: Activity[]) => {
-        setActivities(
-          linked.map((a) => ({
-            mode: 'existing' as ActivityMode,
-            existingId: a.id ?? '',
-            title: a.title,
-          })),
-        );
-        if (linked.length > 0) setActivitiesOpen(true);
-      })
-      .catch(console.error)
-      .finally(() => setLoadingActivities(false));
+    setActivities([]);
+    setActivitiesOpen(false);
+    setActivitiesDirty(false); // ← ici aussi
   }, [initialData?.id]);
 
   // ── Synchroniser selectedProtectedArea en mode création ──────────────────
@@ -146,27 +167,6 @@ export function FundingForm({
   }, [selectedProtectedArea, initialData?.id]);
 
   // ── Gestionnaires activités ───────────────────────────────────────────────
-
-  const addNewActivity = () => {
-    setActivities((prev) => [
-      ...prev,
-      { mode: 'new', title: '', description: '' },
-    ]);
-    setActivitiesOpen(true);
-  };
-
-  const addExistingActivity = () => {
-    setActivities((prev) => [...prev, { mode: 'existing', existingId: '' }]);
-    setActivitiesOpen(true);
-  };
-
-  const removeActivity = (index: number) =>
-    setActivities((prev) => prev.filter((_, i) => i !== index));
-
-  const updateActivity = (index: number, patch: Partial<ActivityEntry>) =>
-    setActivities((prev) =>
-      prev.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)),
-    );
 
   // ── Soumission ────────────────────────────────────────────────────────────
 
@@ -206,6 +206,7 @@ export function FundingForm({
       onSubmit={handleSubmit}
       loading={loading}
       submitButtonText={initialData ? 'Mettre à jour' : 'Créer'}
+      forceEnabled={activitiesDirty}
     >
       <FormInput
         control={form.control}
