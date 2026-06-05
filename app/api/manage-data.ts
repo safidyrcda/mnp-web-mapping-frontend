@@ -23,12 +23,12 @@ async function apiFetch<T>(
     ...options,
   });
   if (!response.ok) throw new Error(`API Error: ${response.status}`);
-  // 204 No Content
   if (response.status === 204) return undefined as T;
   return response.json();
 }
 
-// FUNDERS
+// ── FUNDERS ───────────────────────────────────────────────────────────────────
+
 export const getFunders = async () => apiFetch<Funder[]>('funders');
 export const createFunder = async (data: Omit<Funder, 'id'>) =>
   apiFetch<Funder>('funders', { method: 'POST', body: JSON.stringify(data) });
@@ -40,7 +40,8 @@ export const updateFunder = async (id: string, data: Partial<Funder>) =>
 export const deleteFunder = async (id: string) =>
   apiFetch<void>(`funders/${id}`, { method: 'DELETE' });
 
-// PROJECTS
+// ── PROJECTS ──────────────────────────────────────────────────────────────────
+
 export const getProjects = async () => apiFetch<Project[]>('projects');
 export const createProject = async (data: Omit<Project, 'id'>) =>
   apiFetch<Project>('projects', { method: 'POST', body: JSON.stringify(data) });
@@ -52,18 +53,25 @@ export const updateProject = async (id: string, data: Partial<Project>) =>
 export const deleteProject = async (id: string) =>
   apiFetch<void>(`projects/${id}`, { method: 'DELETE' });
 
-// FUNDINGS
+// ── FUNDINGS ──────────────────────────────────────────────────────────────────
+
 export type FundingItem = {
   id: string;
   name?: string;
-  description?: string; // ← nouveau
+  description?: string;
   debut?: Date;
   end?: Date;
   amount?: number;
   currency?: string;
   project?: Project;
   funderFundings: FunderFunding[];
-  protectedAreaFundings: { id: string; protectedArea: ProtectedArea }[];
+  protectedAreaFundings: {
+    id: string;
+    protectedArea: ProtectedArea;
+    amount?: number;
+    currency?: string;
+    amountInEuro?: number;
+  }[];
   disbursements?: Disbursement[];
   activityFundings?: { id: string; activity: Activity }[];
 };
@@ -80,14 +88,15 @@ export const updateFunding = async (id: string, data: Partial<Funding>) =>
 export const deleteFunding = async (id: string) =>
   apiFetch<void>(`fundings/${id}`, { method: 'DELETE' });
 
-// PROTECTED AREAS
+// ── PROTECTED AREAS ───────────────────────────────────────────────────────────
+
 export const getProtectedAreas = async () =>
   apiFetch<ProtectedArea[]>('protected-areas');
 
-// ACTIVITIES
+// ── ACTIVITIES ────────────────────────────────────────────────────────────────
+
 export const getActivitiesByFunding = async (fundingId: string) =>
   apiFetch<Activity[]>(`fundings/${fundingId}/activities`);
-
 export const createAndLinkActivity = async (
   fundingId: string,
   data: Omit<Activity, 'id'>,
@@ -105,7 +114,8 @@ export const unlinkActivity = async (fundingId: string, activityId: string) =>
     method: 'DELETE',
   });
 
-// DISBURSEMENTS
+// ── DISBURSEMENTS ─────────────────────────────────────────────────────────────
+
 export const getDisbursementsByFunding = async (fundingId: string) =>
   apiFetch<Disbursement[]>(`fundings/${fundingId}/disbursements`);
 export const createDisbursement = async (
@@ -127,9 +137,7 @@ export const updateDisbursement = async (
 export const deleteDisbursement = async (id: string) =>
   apiFetch<void>(`disbursements/${id}`, { method: 'DELETE' });
 
-// Ajouter ces types et cette fonction
-
-// Remplacer FundingDetail et ProtectedAreaDetail par :
+// ── PROTECTED AREA DETAIL ─────────────────────────────────────────────────────
 
 export type FunderInFunding = {
   id: string;
@@ -152,16 +160,16 @@ export type FundingDetail = {
   totalDisbursed: number;
   totalDisbursedEuro: number;
   funders: FunderInFunding[];
-  activities: { id: string; title?: string; description?: string }[]; // ← nouveau
+  activities: { id: string; title?: string; description?: string }[];
   otherProtectedAreas: { id: string; sigle: string; name: string }[];
 };
+
 export type ProtectedAreaDetail = {
   id: string;
   sigle: string;
   name: string;
   status?: string;
   size?: number;
-  // ── Nouveaux champs ──
   superficie?: number;
   creationYear?: number;
   region?: string[];
@@ -176,7 +184,8 @@ export type ProtectedAreaDetail = {
 export const getProtectedAreaDetail = async (id: string) =>
   apiFetch<ProtectedAreaDetail>(`protected-areas/${id}/detail`);
 
-// Activités — ajouter/remplacer dans manage-data.ts
+// ── ACTIVITIES (liste complète) ───────────────────────────────────────────────
+
 export type ActivityWithFundings = Activity & {
   fundings: { id: string; name?: string }[];
 };

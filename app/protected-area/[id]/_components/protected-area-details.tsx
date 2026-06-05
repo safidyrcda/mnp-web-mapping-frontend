@@ -407,7 +407,7 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
               >
                 {funding.otherProtectedAreas.length}
               </span>{' '}
-              Autre(s) aire(s) protégée(s)
+              aire(s) protégée(s)
             </p>
             {/* <div className="flex flex-wrap gap-1.5">
               {funding.otherProtectedAreas.map((pa) => (

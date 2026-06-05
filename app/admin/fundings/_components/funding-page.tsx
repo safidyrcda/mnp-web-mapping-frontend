@@ -383,8 +383,7 @@ export function FundingPage() {
         }}
       >
         {/* En-tête du bloc filtres */}
-        <button
-          type="button"
+        <div
           onClick={() => setFiltersOpen((v) => !v)}
           style={{
             width: '100%',
@@ -458,7 +457,7 @@ export function FundingPage() {
               }}
             />
           </div>
-        </button>
+        </div>
 
         {/* Corps des filtres */}
         {filtersOpen && (
@@ -733,6 +732,7 @@ export function FundingPage() {
           onAddDisbursement={handleAddDisbursement}
           onManageAmounts={handleManageAmounts}
           onManageFunders={handleManageFunders}
+          filterProtectedArea={filterProtectedArea}
         />
       )}
 
@@ -772,9 +772,27 @@ export function FundingPage() {
         fundingId={selectedFundingForAmounts?.id ?? ''}
         fundingName={selectedFundingForAmounts?.name}
         protectedAreas={protectedAreas}
-        defaultProtectedAreaId={filterProtectedArea || undefined} // ← AP du filtre actif
-        onLoad={(id) => fetchProtectedAreaFundings(id)} // à implémenter côté API
-        onSave={(id, entries) => saveProtectedAreaFundings(id, entries)}
+        defaultProtectedAreaId={filterProtectedArea || undefined}
+        onLoad={(id) => fetchProtectedAreaFundings(id)}
+        onSave={async (id, entries) => {
+          await saveProtectedAreaFundings(id, entries);
+          await loadData();
+          toast.success('Montants enregistrés');
+        }}
+      />
+
+      <FundingFundersModal
+        open={isFundersOpen}
+        onOpenChange={setIsFundersOpen}
+        fundingId={selectedFundingForFunders?.id ?? ''}
+        fundingName={selectedFundingForFunders?.name}
+        funders={funders}
+        onLoad={(id) => fetchFundersByFunding(id)}
+        onSave={async (id, entries) => {
+          await saveFunderFundings(id, entries);
+          await loadData();
+          toast.success('Bailleurs enregistrés');
+        }}
       />
 
       <FundingFundersModal

@@ -2,14 +2,7 @@
 
 import { Funding, Funder, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
-import {
-  Eye,
-  Pencil,
-  Trash2,
-  PlusCircle,
-  DollarSign,
-  Users,
-} from 'lucide-react';
+import { Pencil, Trash2, DollarSign, Users } from 'lucide-react';
 import { GetFundingsDTO } from '@/app/api/manage-data';
 import { useRouter } from 'next/navigation';
 
@@ -23,18 +16,131 @@ interface FundingTableProps {
   onAddDisbursement: (fundingId: string) => void;
   onManageAmounts: (funding: GetFundingsDTO[number]) => void;
   onManageFunders: (funding: GetFundingsDTO[number]) => void;
+  filterProtectedArea?: string;
 }
+
+// ── Montant par AP ────────────────────────────────────────────────────────────
+
+function PAAmountCell({
+  funding,
+  filterProtectedArea,
+}: {
+  funding: GetFundingsDTO[number];
+  filterProtectedArea?: string;
+}) {
+  const fmt = (n?: number | null, currency?: string | null) => {
+    if (n == null) return null;
+    const s = new Intl.NumberFormat('fr-FR', {
+      maximumFractionDigits: 0,
+    }).format(n);
+    return currency ? `${s} ${currency}` : s;
+  };
+
+  if (!filterProtectedArea) {
+    return (
+      <span
+        style={{
+          fontSize: 11,
+          color: '#94a3b8',
+          fontStyle: 'italic',
+          lineHeight: '1.4',
+          display: 'block',
+        }}
+      >
+        Sélectionner une AP pour voir son montant
+      </span>
+    );
+  }
+
+  const paf = funding.protectedAreaFundings?.find(
+    (p) => p.protectedArea?.id === filterProtectedArea,
+  );
+
+  if (!paf) {
+    return <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>;
+  }
+
+  const hasAmount = paf.amount != null || paf.amountInEuro != null;
+
+  if (!hasAmount) {
+    return (
+      <span
+        style={{
+          fontSize: 11,
+          color: '#f59e0b',
+          fontStyle: 'italic',
+          display: 'block',
+          lineHeight: '1.4',
+        }}
+      >
+        Aucun montant ventilé pour cette AP
+      </span>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {paf.amount != null && (
+        <span
+          style={{
+            display: 'inline-block',
+            background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+            border: '1px solid #93c5fd',
+            borderRadius: 6,
+            padding: '3px 10px',
+            fontSize: 12,
+            fontWeight: 700,
+            color: '#1d4ed8',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {fmt(paf.amount, paf.currency)}
+        </span>
+      )}
+      {paf.amountInEuro != null && paf.currency !== 'EUR' && (
+        <span
+          style={{
+            fontSize: 11,
+            color: '#64748b',
+            paddingLeft: 2,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ≈ {fmt(paf.amountInEuro, 'EUR')}
+        </span>
+      )}
+      {paf.amountInEuro != null &&
+        (paf.currency === 'EUR' || paf.amount == null) && (
+          <span
+            style={{
+              display: 'inline-block',
+              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+              border: '1px solid #93c5fd',
+              borderRadius: 6,
+              padding: '3px 10px',
+              fontSize: 12,
+              fontWeight: 700,
+              color: '#1d4ed8',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {fmt(paf.amountInEuro, 'EUR')}
+          </span>
+        )}
+    </div>
+  );
+}
+
+// ── Composant principal ───────────────────────────────────────────────────────
 
 export function FundingTable({
   fundings,
   onEdit,
   onDelete,
-  onAddDisbursement,
   onManageAmounts,
   onManageFunders,
+  filterProtectedArea,
 }: FundingTableProps) {
-  const router = useRouter();
-
   const formatMonthYear = (date?: Date | string) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR', {
@@ -73,7 +179,6 @@ export function FundingTable({
       : { bg: '#f8fafc', text: '#475569', border: '#e2e8f0' };
   }
 
-  // Palette de couleurs pour les activités — cycle automatique par index
   const ACTIVITY_PALETTE = [
     { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
     { bg: '#fdf4ff', text: '#7e22ce', border: '#e9d5ff' },
@@ -94,7 +199,6 @@ export function FundingTable({
   }) {
     if (activities.length === 0)
       return <span className="text-muted-foreground text-sm">—</span>;
-
     return (
       <div className="flex flex-col gap-1">
         {activities.map((af, i) => {
@@ -136,21 +240,18 @@ export function FundingTable({
     const MAX_VISIBLE = 43;
     const visible = areas.slice(0, MAX_VISIBLE);
     const hidden = areas.slice(MAX_VISIBLE);
-
     if (areas.length === 0)
       return <span className="text-muted-foreground text-sm">—</span>;
-
     return (
       <div className="flex items-center gap-1 flex-wrap">
         {visible.map((paf) => {
           const c = paColor(paf.protectedArea?.sigle);
           const label =
             paf.protectedArea?.sigle ?? paf.protectedArea?.name ?? '?';
-          const title = paf.protectedArea?.name ?? label;
           return (
             <span
               key={paf.id}
-              title={title}
+              title={paf.protectedArea?.name ?? label}
               style={{
                 background: c.bg,
                 color: c.text,
@@ -192,8 +293,18 @@ export function FundingTable({
     );
   }
 
-  // Alternating row colors
-  const ROW_COLORS = ['bg-white', 'bg-slate-50/60'];
+  const COLUMNS = [
+    { label: 'Nom', width: 300 },
+    { label: 'Bailleur(s)', width: 150 },
+    { label: 'Description', width: 200 },
+    { label: 'Activités', width: 200 },
+    { label: 'Montant', width: 170 },
+    { label: 'Début', width: 110 },
+
+    { label: 'Fin', width: 110 },
+    { label: 'Montant global', width: 130 },
+    { label: 'Aires protégées', width: 300 },
+  ];
 
   return (
     <div
@@ -215,16 +326,7 @@ export function FundingTable({
                 'linear-gradient(135deg, #1e3a5f 0%, #1e4976 50%, #155e8e 100%)',
             }}
           >
-            {[
-              { label: 'Nom', width: 300 },
-              { label: 'Bailleur(s)', width: 150 },
-              { label: 'Description', width: 200 },
-              { label: 'Activités', width: 200 },
-              { label: 'Aires protégées', width: 300 },
-              { label: 'Montant', width: 130 },
-              { label: 'Début', width: 110 },
-              { label: 'Fin', width: 110 },
-            ].map(({ label, width }) => (
+            {COLUMNS.map(({ label, width }) => (
               <th
                 key={label}
                 style={{
@@ -246,7 +348,7 @@ export function FundingTable({
             <th
               className="sticky right-0"
               style={{
-                minWidth: 89,
+                minWidth: 120,
                 padding: '12px 16px',
                 textAlign: 'right',
                 fontSize: 12,
@@ -267,7 +369,6 @@ export function FundingTable({
           {fundings.map((funding, rowIndex) => {
             const isEven = rowIndex % 2 === 0;
             const rowBg = isEven ? '#ffffff' : '#f8fafc';
-
             return (
               <tr
                 key={funding.id}
@@ -281,7 +382,7 @@ export function FundingTable({
                     rowBg;
                 }}
               >
-                {/* Nom — largeur réduite, retour à la ligne autorisé */}
+                {/* Nom */}
                 <td
                   style={{
                     padding: '12px 16px',
@@ -337,9 +438,9 @@ export function FundingTable({
                             fontSize: 11,
                             fontWeight: 600,
                             color: '#334155',
-                            wordBreak: 'break-word', // ← coupe si un mot est très long
-                            overflowWrap: 'break-word', // ← fallback cross-browser
-                            whiteSpace: 'normal', // ← autorise le retour à la ligne
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            whiteSpace: 'normal',
                             lineHeight: '1.5',
                           }}
                         >
@@ -366,11 +467,7 @@ export function FundingTable({
                   {funding.description ? (
                     <span
                       title={funding.description}
-                      style={{
-                        display: '-webkit-box',
-
-                        lineHeight: '1.5',
-                      }}
+                      style={{ lineHeight: '1.5' }}
                     >
                       {funding.description}
                     </span>
@@ -379,7 +476,7 @@ export function FundingTable({
                   )}
                 </td>
 
-                {/* Activités — toutes affichées */}
+                {/* Activités */}
                 <td
                   style={{
                     padding: '12px 16px',
@@ -390,7 +487,7 @@ export function FundingTable({
                   <ActivityPills activities={funding.activityFundings ?? []} />
                 </td>
 
-                {/* Aires protégées */}
+                {/* Montant AP */}
                 <td
                   style={{
                     padding: '12px 16px',
@@ -398,38 +495,10 @@ export function FundingTable({
                     verticalAlign: 'top',
                   }}
                 >
-                  <ProtectedAreaPills
-                    areas={funding.protectedAreaFundings ?? []}
+                  <PAAmountCell
+                    funding={funding}
+                    filterProtectedArea={filterProtectedArea}
                   />
-                </td>
-
-                {/* Montant */}
-                <td
-                  style={{
-                    padding: '12px 16px',
-                    borderBottom: '1px solid #e2e8f0',
-                    verticalAlign: 'top',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {funding.amount ? (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-                        border: '1px solid #86efac',
-                        borderRadius: 6,
-                        padding: '3px 10px',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: '#15803d',
-                      }}
-                    >
-                      {formatAmount(funding.amount, funding.currency)}
-                    </span>
-                  ) : (
-                    <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>
-                  )}
                 </td>
 
                 {/* Début */}
@@ -460,18 +529,60 @@ export function FundingTable({
                   {formatMonthYear(funding.end)}
                 </td>
 
-                {/* Actions — sticky droite */}
+                {/* Montant global */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {funding.amount ? (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                        border: '1px solid #86efac',
+                        borderRadius: 6,
+                        padding: '3px 10px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#15803d',
+                      }}
+                    >
+                      {formatAmount(funding.amount, funding.currency)}
+                    </span>
+                  ) : (
+                    <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>
+                  )}
+                </td>
+
+                {/* Aires protégées */}
+                <td
+                  style={{
+                    padding: '12px 16px',
+                    borderBottom: '1px solid #e2e8f0',
+                    verticalAlign: 'top',
+                  }}
+                >
+                  <ProtectedAreaPills
+                    areas={funding.protectedAreaFundings ?? []}
+                  />
+                </td>
+
+                {/* Actions */}
                 <td
                   className="sticky right-0"
                   style={{
                     background: rowBg,
                     borderBottom: '1px solid #e2e8f0',
+                    borderLeft: '1px solid #e2e8f0',
                     padding: '12px 16px',
                     verticalAlign: 'top',
                   }}
                 >
                   <div className="flex justify-end gap-1.5">
-                    {/* 🆕 Montants par AP */}
                     <Button
                       size="sm"
                       variant="outline"
@@ -482,7 +593,6 @@ export function FundingTable({
                       <DollarSign className="w-3.5 h-3.5" />
                     </Button>
 
-                    {/* 🆕 Bailleurs / partenaires */}
                     <Button
                       size="sm"
                       variant="outline"
@@ -493,7 +603,6 @@ export function FundingTable({
                       <Users className="w-3.5 h-3.5" />
                     </Button>
 
-                    {/* existant : édition */}
                     <Button
                       size="sm"
                       variant="outline"
@@ -522,7 +631,6 @@ export function FundingTable({
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
 
-                    {/* existant : suppression */}
                     <Button
                       size="sm"
                       variant="outline"

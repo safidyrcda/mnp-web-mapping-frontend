@@ -179,8 +179,7 @@ export function ProtectedAreaPage() {
           boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
         }}
       >
-        <button
-          type="button"
+        <div
           onClick={() => setFiltersOpen((v) => !v)}
           style={{
             width: '100%',
@@ -251,7 +250,7 @@ export function ProtectedAreaPage() {
               }}
             />
           </div>
-        </button>
+        </div>
 
         {filtersOpen && (
           <div
