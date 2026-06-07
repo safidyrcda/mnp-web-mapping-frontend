@@ -101,18 +101,17 @@ export function FundingForm({
     setActivitiesDirty(true); // ← ajouter
   };
 
-  // ── Reset complet du formulaire à chaque ouverture ────────────────────────
   useEffect(() => {
     const paIds = initialData?.protectedAreaIds?.filter(Boolean) ?? [];
 
-    // Dans le useEffect([initialData?.id]) — s'assurer que amountInEuro est présent
     form.reset({
       name: initialData?.name ?? '',
+      description: initialData?.description ?? '', // ← forcer string vide si null
       debut: initialData?.debut,
       end: initialData?.end,
       currency: initialData?.currency,
       amount: initialData?.amount,
-      amountInEuro: (initialData as any)?.amountInEuro ?? null, // ← vérifier cette ligne
+      amountInEuro: initialData?.amountInEuro,
       funders: [],
       protectedAreaIds:
         paIds.length > 0
@@ -122,9 +121,39 @@ export function FundingForm({
             : [],
     });
 
-    // Reset activités
     setActivities([]);
     setActivitiesOpen(false);
+    setActivitiesDirty(false);
+
+    if (!initialData?.id) return;
+
+    // ── Bailleurs ──────────────────────────────────────────────────────────
+    fetchFundersByFunding(initialData.id)
+      .then((res: Funder[]) => {
+        form.setValue('funders', res.map((f) => f.id || '').filter(Boolean));
+      })
+      .catch(console.error);
+
+    // ── APs (sécurité) ─────────────────────────────────────────────────────
+    if (paIds.length > 0) {
+      form.setValue('protectedAreaIds', paIds);
+    }
+
+    // ── Activités ──────────────────────────────────────────────────────────
+    setLoadingActivities(true);
+    getActivitiesByFunding(initialData.id)
+      .then((linked: Activity[]) => {
+        setActivities(
+          linked.map((a) => ({
+            mode: 'existing' as ActivityMode,
+            existingId: a.id ?? '',
+            title: a.title,
+          })),
+        );
+        if (linked.length > 0) setActivitiesOpen(true);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingActivities(false));
   }, [initialData?.id]);
 
   // ── Chargement des activités existantes ───────────────────────────────────
@@ -133,29 +162,6 @@ export function FundingForm({
   }, []);
 
   // ── Chargement des relations liées au financement ─────────────────────────
-  useEffect(() => {
-    const paIds = initialData?.protectedAreaIds?.filter(Boolean) ?? [];
-
-    form.reset({
-      name: initialData?.name ?? '',
-      debut: initialData?.debut,
-      end: initialData?.end,
-      currency: initialData?.currency,
-      amount: initialData?.amount,
-      amountInEuro: (initialData as any)?.amountInEuro ?? null, // ← ici
-      funders: [],
-      protectedAreaIds:
-        paIds.length > 0
-          ? paIds
-          : selectedProtectedArea
-            ? [selectedProtectedArea]
-            : [],
-    });
-
-    setActivities([]);
-    setActivitiesOpen(false);
-    setActivitiesDirty(false); // ← ici aussi
-  }, [initialData?.id]);
 
   // ── Synchroniser selectedProtectedArea en mode création ──────────────────
   useEffect(() => {

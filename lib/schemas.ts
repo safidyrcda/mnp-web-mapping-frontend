@@ -48,7 +48,7 @@ export const disbursementSchema = z.object({
   note: z.string().optional().nullable(),
   amount: z.coerce.number().min(0, 'Le montant doit être positif'),
   currency: z.string().optional().nullable(),
-  amountInEuro: z.coerce.number().optional().nullable(),
+  amountInEuro: z.coerce.number().nullable().optional(),
   fundingId: z.string().uuid().optional(),
 });
 export type Disbursement = z.infer<typeof disbursementSchema>;
@@ -70,7 +70,7 @@ export const fundingSchema = z.object({
   end: z.coerce.date().optional().nullable(),
   amount: z.coerce.number().optional().nullable(),
   currency: z.string().optional().nullable(),
-  amountInEuro: z.number().nullable().optional(),
+  amountInEuro: z.coerce.number().nullable().optional(),
   funderFundings: z.array(funderFundingSchema).optional(),
   protectedAreaFundings: z.array(protectedAreaFundingSchema).optional(),
 });
