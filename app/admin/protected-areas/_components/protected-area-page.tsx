@@ -629,7 +629,7 @@ export function ProtectedAreaPage() {
                         e.currentTarget.style.color = '#475569';
                       }}
                     >
-                      <Users size={12} /> Bailleurs
+                      <Users size={12} /> Partenaires
                     </button>
                   </td>
                 </tr>
