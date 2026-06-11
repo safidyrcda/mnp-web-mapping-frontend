@@ -679,6 +679,7 @@ export function FundingTable({
                           description: funding.description,
                           amount: funding.amount,
                           currency: funding.currency,
+                          amountInEuro: funding.amountInEuro,
                           debut: funding.debut,
                           end: funding.end,
                           projectId: funding.project?.id,

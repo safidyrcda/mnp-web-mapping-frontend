@@ -63,6 +63,7 @@ export type FundingItem = {
   end?: Date;
   amount?: number;
   currency?: string;
+  amountInEuro?: number; // ← ajouter
   project?: Project;
   funderFundings: FunderFunding[];
   protectedAreaFundings: {
@@ -73,11 +74,17 @@ export type FundingItem = {
     amountInEuro?: number;
   }[];
   disbursements?: Disbursement[];
-  activityFundings?: { id: string; activity: Activity }[];
+  activityFundings?: { id: string; activity: Activity; createdAt?: string }[];
 };
 export type GetFundingsDTO = FundingItem[];
 
-export const getFundings = async () => apiFetch<GetFundingsDTO>('fundings');
+export const getFundings = async () => {
+  const a = await apiFetch<GetFundingsDTO>('fundings');
+
+  console.log('Fetched fundings:', a[0]); // Log pour vérifier les données reçues
+  return a;
+};
+
 export const createFunding = async (data: Partial<Funding>) =>
   apiFetch<Funding>('fundings', { method: 'POST', body: JSON.stringify(data) });
 export const updateFunding = async (id: string, data: Partial<Funding>) =>
