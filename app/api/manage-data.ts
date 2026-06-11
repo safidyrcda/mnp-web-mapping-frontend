@@ -217,3 +217,41 @@ export const updateActivity = async (id: string, data: Partial<Activity>) =>
   });
 export const deleteActivity = async (id: string) =>
   apiFetch<void>(`activities/${id}`, { method: 'DELETE' });
+
+export enum ProtectedAreaFunderType {
+  FUNDER = 'funder',
+  TECHNICAL_PARTNER = 'technical_partner',
+  STRATEGICAL_PARTNER = 'strategical_partner',
+}
+
+export interface ProtectedAreaFunderEntry {
+  id?: string;
+  funderId: string;
+  type?: ProtectedAreaFunderType;
+}
+
+export const fetchFundersByProtectedArea = async (
+  protectedAreaId: string,
+): Promise<ProtectedAreaFunderEntry[]> => {
+  const response = await fetch(
+    `${BASE_URL}/protected-area-funders/protected-area/${protectedAreaId}`,
+  );
+  if (!response.ok) throw new Error('Erreur lors du chargement des bailleurs');
+  return response.json();
+};
+
+export const saveFundersForProtectedArea = async (
+  protectedAreaId: string,
+  entries: ProtectedAreaFunderEntry[],
+): Promise<void> => {
+  const response = await fetch(
+    `${BASE_URL}/protected-area-funders/protected-area/${protectedAreaId}`,
+    {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries }),
+    },
+  );
+  if (!response.ok)
+    throw new Error('Erreur lors de la sauvegarde des bailleurs');
+};

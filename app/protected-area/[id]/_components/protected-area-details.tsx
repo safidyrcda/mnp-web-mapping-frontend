@@ -6,10 +6,13 @@ import {
   ProtectedAreaDetail,
   FundingDetail,
   FunderInFunding,
+  getProtectedAreas,
+  getFunders,
 } from '@/app/api/manage-data';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Leaf } from 'lucide-react';
 import { toast } from 'sonner';
+import { Funder, ProtectedArea } from '@/lib/schemas';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 
@@ -437,6 +440,11 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
   const router = useRouter();
   const [data, setData] = useState<ProtectedAreaDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [funders, setFunders] = useState<Funder[]>([]);
+  const [isFundersOpen, setIsFundersOpen] = useState(false);
+  const [selectedAPForFunders, setSelectedAPForFunders] =
+    useState<ProtectedArea | null>(null);
 
   useEffect(() => {
     getProtectedAreaDetail(areaId)

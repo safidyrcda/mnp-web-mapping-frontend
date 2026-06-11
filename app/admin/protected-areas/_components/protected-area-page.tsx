@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ProtectedArea } from '@/lib/schemas';
-import { getProtectedAreas } from '@/app/api/manage-data';
+import { Funder, ProtectedArea } from '@/lib/schemas';
+import {
+  fetchFundersByProtectedArea,
+  getFunders,
+  getProtectedAreas,
+  saveFundersForProtectedArea,
+} from '@/app/api/manage-data';
 import { Button } from '@/components/ui/button';
 import { BaseModal } from '@/components/modals/base-modal';
 import {
@@ -12,11 +17,13 @@ import {
   ChevronDown,
   Pencil,
   MapPin,
+  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProtectedAreaForm } from './protected-area-form';
 import { updateProtectedArea } from '@/app/api/protected-areas/ap-api';
 import { useRouter } from 'next/navigation';
+import { ProtectedAreaFundersModal } from './protected-area-funder-modal';
 
 export function ProtectedAreaPage() {
   const router = useRouter();
@@ -29,6 +36,10 @@ export function ProtectedAreaPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedAP, setSelectedAP] = useState<ProtectedArea | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [funders, setFunders] = useState<Funder[]>([]);
+  const [isFundersOpen, setIsFundersOpen] = useState(false);
+  const [selectedAPForFunders, setSelectedAPForFunders] =
+    useState<ProtectedArea | null>(null);
 
   useEffect(() => {
     loadData();
@@ -36,6 +47,12 @@ export function ProtectedAreaPage() {
 
   const loadData = async () => {
     try {
+      const [protectedAreasData, fundersData] = await Promise.all([
+        getProtectedAreas(),
+        getFunders(),
+      ]);
+      setProtectedAreas(protectedAreasData);
+      setFunders(fundersData);
       setIsInitialLoading(true);
       setProtectedAreas(await getProtectedAreas());
     } catch {
@@ -73,6 +90,11 @@ export function ProtectedAreaPage() {
   const handleEditClick = (pa: ProtectedArea) => {
     setSelectedAP(pa);
     setIsFormOpen(true);
+  };
+
+  const handleManageFunders = (pa: ProtectedArea) => {
+    setSelectedAPForFunders(pa);
+    setIsFundersOpen(true);
   };
 
   const handleFormSubmit = async (data: Partial<ProtectedArea>) => {
@@ -168,7 +190,6 @@ export function ProtectedAreaPage() {
           </Button>
         </div>
       </div>
-
       {/* Filtres */}
       <div
         style={{
@@ -387,7 +408,6 @@ export function ProtectedAreaPage() {
           </div>
         )}
       </div>
-
       {/* Tableau */}
       {filtered.length === 0 ? (
         <div
@@ -579,6 +599,38 @@ export function ProtectedAreaPage() {
                     >
                       <Pencil size={12} /> Modifier
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleManageFunders(pa)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        background: 'transparent',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 7,
+                        padding: '5px 10px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: '#475569',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        marginRight: 6,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#fdf4ff';
+                        e.currentTarget.style.borderColor = '#e9d5ff';
+                        e.currentTarget.style.color = '#7e22ce';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                        e.currentTarget.style.color = '#475569';
+                      }}
+                    >
+                      <Users size={12} /> Bailleurs
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -586,7 +638,6 @@ export function ProtectedAreaPage() {
           </table>
         </div>
       )}
-
       {/* Modale */}
       <BaseModal
         open={isFormOpen}
@@ -599,6 +650,18 @@ export function ProtectedAreaPage() {
           loading={isLoading}
         />
       </BaseModal>
+      <ProtectedAreaFundersModal
+        open={isFundersOpen}
+        onOpenChange={setIsFundersOpen}
+        protectedAreaId={selectedAPForFunders?.id ?? ''}
+        protectedAreaName={`${selectedAPForFunders?.sigle ?? ''} – ${selectedAPForFunders?.name ?? ''}`}
+        funders={funders}
+        onLoad={fetchFundersByProtectedArea}
+        onSave={async (id, entries) => {
+          await saveFundersForProtectedArea(id, entries);
+          toast.success('Bailleurs enregistrés');
+        }}
+      />
     </div>
   );
 }
