@@ -54,7 +54,7 @@ export function FundingDetailPage({ fundingId }: FundingDetailPageProps) {
     );
   }
 
-  const funders = funding.funderFundings.map((ff) => ff.funder.name).join(', ');
+  // const funders = funding.funderFundings.map((ff) => ff.funder.name).join(', ');
   const areas = funding.protectedAreaFundings
     .map((paf) => paf.protectedArea.sigle)
     .join(', ');
@@ -79,12 +79,12 @@ export function FundingDetailPage({ fundingId }: FundingDetailPageProps) {
           {funding.name || 'Financement sans nom'}
         </h1>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          {funders && (
+          {/* {funders && (
             <span>
               Bailleur(s) :{' '}
               <strong className="text-foreground">{funders}</strong>
             </span>
-          )}
+          )} */}
           {areas && (
             <span>
               Aires protégées :{' '}

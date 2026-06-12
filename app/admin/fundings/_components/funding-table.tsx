@@ -4,6 +4,34 @@ import { Funding, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, DollarSign } from 'lucide-react';
 import { GetFundingsDTO } from '@/app/api/manage-data';
+import { ProtectedAreaPartnerEntry } from '@/app/api/manage-data';
+
+// ── Composant FunderPartnersCell ────────────────────────────────────────────
+// À placer avant le composant principal FundingTable, après PAAmountCell
+
+const PARTNER_TYPE_STYLES: Record<
+  string,
+  { bg: string; text: string; border: string; label: string }
+> = {
+  funder: {
+    bg: '#eff6ff',
+    text: '#1d4ed8',
+    border: '#bfdbfe',
+    label: 'Bailleur',
+  },
+  technical_partner: {
+    bg: '#f0fdf4',
+    text: '#15803d',
+    border: '#86efac',
+    label: 'Part. technique',
+  },
+  strategical_partner: {
+    bg: '#fdf4ff',
+    text: '#7e22ce',
+    border: '#e9d5ff',
+    label: 'Part. stratégique',
+  },
+};
 
 interface FundingTableProps {
   fundings: GetFundingsDTO;
@@ -17,6 +45,88 @@ interface FundingTableProps {
 }
 
 // ── Montant par AP ────────────────────────────────────────────────────────────
+
+function FunderPartnersCell({
+  funding,
+  filterProtectedArea,
+}: {
+  funding: GetFundingsDTO[number];
+  filterProtectedArea?: string;
+}) {
+  const pills: { label: string; fullname?: string; type: string }[] = [];
+
+  // Le bailleur principal du financement (relation funder)
+  if (funding.funder?.name) {
+    pills.push({
+      label: funding.funder.name,
+      fullname: funding.funder.fullname,
+      type: 'funder',
+    });
+  }
+
+  // Les partenaires de l'AP filtrée (relation protectedAreaPartner)
+  if (filterProtectedArea) {
+    const paf = funding.protectedAreaFundings?.find(
+      (p) => p.protectedArea?.id === filterProtectedArea,
+    );
+    const partners: ProtectedAreaPartnerEntry[] =
+      (paf?.protectedArea as any)?.partners ?? [];
+
+    partners.forEach((p: any) => {
+      pills.push({
+        label: p.partner?.name ?? p.name ?? '?',
+        fullname: p.partner?.fullname ?? p.fullname,
+        type: p.type,
+      });
+    });
+  }
+
+  if (pills.length === 0) {
+    return <span style={{ color: '#94a3b8', fontSize: 12 }}>—</span>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {pills.map((p, i) => {
+        const s = PARTNER_TYPE_STYLES[p.type] ?? PARTNER_TYPE_STYLES.funder;
+        return (
+          <span
+            key={i}
+            title={p.fullname}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              background: s.bg,
+              border: `1px solid ${s.border}`,
+              borderRadius: 4,
+              padding: '3px 7px',
+              fontSize: 11,
+              fontWeight: 600,
+              color: s.text,
+              wordBreak: 'break-word',
+              whiteSpace: 'normal',
+              lineHeight: '1.4',
+            }}
+          >
+            <span>{p.label}</span>
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                opacity: 0.75,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {s.label}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 function PAAmountCell({
   funding,
@@ -469,7 +579,6 @@ export function FundingTable({
                   </span>
                 </td>
 
-                {/* Bailleur — unique */}
                 <td
                   style={{
                     padding: '12px 16px',
@@ -477,30 +586,13 @@ export function FundingTable({
                     color: '#475569',
                     borderBottom: '1px solid #e2e8f0',
                     verticalAlign: 'top',
-                    maxWidth: 150,
+                    maxWidth: 180,
                   }}
                 >
-                  {funding.funder?.name ? (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        background: '#f1f5f9',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: 4,
-                        padding: '3px 7px',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: '#334155',
-                        wordBreak: 'break-word',
-                        whiteSpace: 'normal',
-                        lineHeight: '1.5',
-                      }}
-                    >
-                      {funding.funder.name}
-                    </span>
-                  ) : (
-                    <span style={{ color: '#94a3b8' }}>—</span>
-                  )}
+                  <FunderPartnersCell
+                    funding={funding}
+                    filterProtectedArea={filterProtectedArea}
+                  />
                 </td>
 
                 {/* Description */}

@@ -84,18 +84,18 @@ export type Funding = z.infer<typeof fundingSchema>;
 
 // src/lib/schemas.ts — ajouts
 
-export enum FunderFundingType {
+export enum FundingType {
   FUNDER = 'funder',
   TECHNICAL_PARTNER = 'technical_partner',
   STRATEGICAL_PARTNER = 'strategical_partner',
   TECHNICAL_AND_FUNDER = 'technical_and_funder',
 }
 
-export const FUNDER_FUNDING_TYPE_LABELS: Record<FunderFundingType, string> = {
-  [FunderFundingType.FUNDER]: 'Bailleur',
-  [FunderFundingType.TECHNICAL_PARTNER]: 'Partenaire technique',
-  [FunderFundingType.STRATEGICAL_PARTNER]: 'Partenaire stratégique',
-  [FunderFundingType.TECHNICAL_AND_FUNDER]: 'Bailleur et partenaire technique',
+export const FUNDING_TYPE_LABELS: Record<FundingType, string> = {
+  [FundingType.FUNDER]: 'Bailleur',
+  [FundingType.TECHNICAL_PARTNER]: 'Partenaire technique',
+  [FundingType.STRATEGICAL_PARTNER]: 'Partenaire stratégique',
+  [FundingType.TECHNICAL_AND_FUNDER]: 'Bailleur et partenaire technique',
 };
 
 export const partnershipSchema = z.object({
@@ -106,7 +106,7 @@ export const partnershipSchema = z.object({
     .string()
     .uuid('Veuillez sélectionner un bailleur/partenaire')
     .min(1, 'Le partenaire est requis'),
-  fundingType: z.nativeEnum(FunderFundingType, {
+  fundingType: z.nativeEnum(FundingType, {
     errorMap: () => ({ message: 'Le type de partenariat est requis' }),
   }),
   protectedAreaIds: z

@@ -9,8 +9,8 @@ import {
   type Funder,
   type ProtectedArea,
   type Activity,
-  FunderFundingType,
-  FUNDER_FUNDING_TYPE_LABELS,
+  FundingType,
+  FUNDING_TYPE_LABELS,
 } from '@/lib/schemas';
 import { FormWrapper } from '@/components/form/form-wrapper';
 import { FormInput } from '@/components/form/form-fields';
@@ -193,9 +193,9 @@ export function PartnershipForm({
           className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">— Sélectionner un type —</option>
-          {Object.values(FunderFundingType).map((type) => (
+          {Object.values(FundingType).map((type) => (
             <option key={type} value={type}>
-              {FUNDER_FUNDING_TYPE_LABELS[type]}
+              {FUNDING_TYPE_LABELS[type]}
             </option>
           ))}
         </select>

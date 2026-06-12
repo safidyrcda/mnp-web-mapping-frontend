@@ -215,17 +215,17 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
     (funding.globalAmount !== funding.paAmount ||
       funding.globalCurrency !== funding.paCurrency);
 
-  const fundersByType = {
-    funder: funding.funders.filter((f) => !f.type || f.type === 'funder'),
-    technical_partner: funding.funders.filter(
-      (f) => f.type === 'technical_partner',
-    ),
-    strategical_partner: funding.funders.filter(
-      (f) => f.type === 'strategical_partner',
-    ),
-  };
+  // const fundersByType = {
+  //   funder: funding.funders.filter((f) => !f.type || f.type === 'funder'),
+  //   technical_partner: funding.funders.filter(
+  //     (f) => f.type === 'technical_partner',
+  //   ),
+  //   strategical_partner: funding.funders.filter(
+  //     (f) => f.type === 'strategical_partner',
+  //   ),
+  // };
 
-  const hasAnyFunder = funding.funders.length > 0;
+  // const hasAnyFunder = funding.funders.length > 0;
 
   return (
     <div
@@ -333,7 +333,7 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
       {/* ── Corps ── */}
       <div className="px-4 py-3.5 space-y-3">
         {/* Bailleurs groupés par type */}
-        {hasAnyFunder && (
+        {/* {hasAnyFunder && (
           <div className="space-y-2.5">
             {(
               [
@@ -349,7 +349,7 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
               />
             ))}
           </div>
-        )}
+        )} */}
         {/* Activités liées au financement */}
         {funding.activities?.length > 0 && (
           <div>
@@ -473,19 +473,19 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
     );
   }
 
-  const allFunders = Array.from(
-    new Map(
-      data.fundings.flatMap((f) => f.funders).map((fu) => [fu.id, fu]),
-    ).values(),
-  );
+  // const allFunders = Array.from(
+  //   new Map(
+  //     data.fundings.flatMap((f) => f.funders).map((fu) => [fu.id, fu]),
+  //   ).values(),
+  // );
 
-  const fundersByType = {
-    funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
-    technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
-    strategical_partner: allFunders.filter(
-      (f) => f.type === 'strategical_partner',
-    ),
-  };
+  // const fundersByType = {
+  //   funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
+  //   technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
+  //   strategical_partner: allFunders.filter(
+  //     (f) => f.type === 'strategical_partner',
+  //   ),
+  // };
 
   const totalPaEuro = data.fundings.reduce(
     (s, f) => s + (f.paAmountInEuro ?? f.globalAmountInEuro ?? 0),
@@ -624,7 +624,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
                 value={String(data.fundings.length)}
                 variant="green"
               />
-              <StatCard
+              {/* <StatCard
                 label="Partenaires"
                 value={String(allFunders.length)}
                 sub={allFunders.map((f) => f.name).join(', ')}
@@ -636,7 +636,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
                   value={fmt(totalPaEuro, 'EUR')}
                   variant="amber"
                 />
-              )}
+              )} */}
               {data.populationCount != null && (
                 <StatCard
                   label="Population"
@@ -657,7 +657,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
             </div>
           </div>
 
-          {/* Bailleurs globaux groupés */}
+          {/* Bailleurs globaux groupés
           {allFunders.length > 0 && (
             <div>
               <p
@@ -682,7 +682,7 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
 
           <div
             className="border-t"

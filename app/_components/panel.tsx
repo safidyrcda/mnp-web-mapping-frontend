@@ -105,23 +105,23 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
 
   const colors = statusColor(properties.status);
 
-  // ── Agrégations ──────────────────────────────────────────────────────────
-  const allFunders = detail
-    ? [
-        ...new Map(
-          detail.fundings.flatMap((f) => f.funders).map((fu) => [fu.id, fu]),
-        ).values(),
-      ]
-    : [];
+  // // ── Agrégations ──────────────────────────────────────────────────────────
+  // const allFunders = detail
+  //   ? [
+  //       ...new Map(
+  //         detail.fundings.flatMap((f) => f.funders).map((fu) => [fu.id, fu]),
+  //       ).values(),
+  //     ]
+  //   : [];
 
   // Séparer par type
-  const fundersByType = {
-    funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
-    technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
-    strategical_partner: allFunders.filter(
-      (f) => f.type === 'strategical_partner',
-    ),
-  };
+  // const fundersByType = {
+  //   funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
+  //   technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
+  //   strategical_partner: allFunders.filter(
+  //     (f) => f.type === 'strategical_partner',
+  //   ),
+  // };
 
   const totalFundings = detail?.fundings?.length ?? 0;
   const activeUntil = detail?.fundings
@@ -367,12 +367,12 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                   value={totalFundings > 0 ? `${totalFundings}` : '—'}
                   accent="#2d5a40"
                 />
-                <MetricCard
+                {/* <MetricCard
                   icon={<Users size={15} color="#1565c0" />}
                   label="Bailleurs"
                   value={allFunders.length > 0 ? `${allFunders.length}` : '—'}
                   accent="#1565c0"
-                />
+                /> */}
                 {activeUntil && (
                   <MetricCard
                     icon={<Calendar size={15} color="#00695c" />}
@@ -446,7 +446,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
               )}
 
               {/* ── Bailleurs / Partenaires séparés par type ── */}
-              {allFunders.length > 0 && (
+              {/* {allFunders.length > 0 && (
                 <Section title="Bailleurs & Partenaires">
                   <div
                     style={{
@@ -509,7 +509,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                     })}
                   </div>
                 </Section>
-              )}
+              )} */}
 
               {/* ── Financements ── */}
               {detail && detail.fundings.length > 0 && (
