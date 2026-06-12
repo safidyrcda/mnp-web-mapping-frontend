@@ -3,66 +3,57 @@
 import { useState, useEffect } from 'react';
 import { BaseModal } from '@/components/modals/base-modal';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Users } from 'lucide-react';
-import type { Funder } from '@/lib/schemas';
-import { ProtectedAreaFunderEntry } from '@/app/api/manage-data';
+import { Trash2, Plus, Users, Pencil } from 'lucide-react';
+import type { Partner } from '@/lib/schemas';
+import { PartnerType } from '@/app/api/manage-data';
 
-export enum ProtectedAreaFunderType {
-  FUNDER = 'funder',
-  TECHNICAL_PARTNER = 'technical_partner',
-  STRATEGICAL_PARTNER = 'strategical_partner',
-}
-
-const TYPE_LABELS: Record<ProtectedAreaFunderType, string> = {
-  [ProtectedAreaFunderType.FUNDER]: 'Bailleur',
-  [ProtectedAreaFunderType.TECHNICAL_PARTNER]: 'Partenaire technique',
-  [ProtectedAreaFunderType.STRATEGICAL_PARTNER]: 'Partenaire stratégique',
+const TYPE_LABELS: Record<PartnerType, string> = {
+  [PartnerType.TECHNICAL_PARTNER]: 'Partenaire technique',
+  [PartnerType.STRATEGICAL_PARTNER]: 'Partenaire stratégique',
 };
 
 const TYPE_STYLES: Record<
-  ProtectedAreaFunderType,
+  PartnerType,
   { bg: string; text: string; border: string }
 > = {
-  [ProtectedAreaFunderType.FUNDER]: {
-    bg: '#eff6ff',
-    text: '#1d4ed8',
-    border: '#bfdbfe',
-  },
-  [ProtectedAreaFunderType.TECHNICAL_PARTNER]: {
+  [PartnerType.TECHNICAL_PARTNER]: {
     bg: '#f0fdf4',
     text: '#15803d',
     border: '#86efac',
   },
-  [ProtectedAreaFunderType.STRATEGICAL_PARTNER]: {
+  [PartnerType.STRATEGICAL_PARTNER]: {
     bg: '#fdf4ff',
     text: '#7e22ce',
     border: '#e9d5ff',
   },
 };
 
+interface PartnerEntry {
+  id?: string;
+  partnerId: string;
+  type: PartnerType;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   protectedAreaId: string;
   protectedAreaName?: string;
-  funders: Funder[];
-  onLoad: (protectedAreaId: string) => Promise<ProtectedAreaFunderEntry[]>;
-  onSave: (
-    protectedAreaId: string,
-    entries: ProtectedAreaFunderEntry[],
-  ) => Promise<void>;
+  partners: Partner[];
+  onLoad: (protectedAreaId: string) => Promise<any[]>;
+  onSave: (protectedAreaId: string, entries: PartnerEntry[]) => Promise<void>;
 }
 
-export function ProtectedAreaFundersModal({
+export function ProtectedAreaPartnersModal({
   open,
   onOpenChange,
   protectedAreaId,
   protectedAreaName,
-  funders,
+  partners,
   onLoad,
   onSave,
 }: Props) {
-  const [entries, setEntries] = useState<ProtectedAreaFunderEntry[]>([]);
+  const [entries, setEntries] = useState<PartnerEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -73,13 +64,13 @@ export function ProtectedAreaFundersModal({
     setLoading(true);
     onLoad(protectedAreaId)
       .then((data: any[]) => {
-        const normalized: ProtectedAreaFunderEntry[] = data.map((item) => ({
+        const normalized: PartnerEntry[] = data.map((item) => ({
           id: item.id,
-          funderId: item.funder?.id ?? item.funderId ?? '',
-          type: item.type ?? ProtectedAreaFunderType.FUNDER,
+          partnerId: item.partnerId ?? item.partner?.id ?? '',
+          type: item.type,
         }));
         if (normalized.length === 0) {
-          setEntries([{ funderId: '', type: ProtectedAreaFunderType.FUNDER }]);
+          setEntries([{ partnerId: '', type: PartnerType.TECHNICAL_PARTNER }]);
           setEditingIndex(0);
         } else {
           setEntries(normalized);
@@ -90,11 +81,12 @@ export function ProtectedAreaFundersModal({
   }, [open, protectedAreaId]);
 
   const addEntry = () => {
+    const newIndex = entries.length;
     setEntries((prev) => [
       ...prev,
-      { funderId: '', type: ProtectedAreaFunderType.FUNDER },
+      { partnerId: '', type: PartnerType.TECHNICAL_PARTNER },
     ]);
-    setEditingIndex(entries.length);
+    setEditingIndex(newIndex);
   };
 
   const removeEntry = (i: number) => {
@@ -102,7 +94,7 @@ export function ProtectedAreaFundersModal({
     if (editingIndex === i) setEditingIndex(null);
   };
 
-  const update = (i: number, patch: Partial<ProtectedAreaFunderEntry>) =>
+  const update = (i: number, patch: Partial<PartnerEntry>) =>
     setEntries((prev) =>
       prev.map((e, idx) => (idx === i ? { ...e, ...patch } : e)),
     );
@@ -110,7 +102,10 @@ export function ProtectedAreaFundersModal({
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(protectedAreaId, entries);
+      await onSave(
+        protectedAreaId,
+        entries.filter((e) => e.partnerId),
+      );
       onOpenChange(false);
     } catch (e) {
       console.error(e);
@@ -119,19 +114,17 @@ export function ProtectedAreaFundersModal({
     }
   };
 
-  const usedFunderIds = (i: number) =>
-    entries.filter((_, idx) => idx !== i).map((e) => e.funderId);
+  const usedPartnerIds = (i: number) =>
+    entries.filter((_, idx) => idx !== i).map((e) => e.partnerId);
 
-  const getFunderLabel = (funderId: string) => {
-    const f = funders.find((f) => f.id === funderId);
-    return f?.name ?? funderId;
-  };
+  const getPartnerLabel = (id: string) =>
+    partners.find((p) => p.id === id)?.name ?? id;
 
   return (
     <BaseModal
       open={open}
       onOpenChange={onOpenChange}
-      title={`Bailleurs & partenaires — ${protectedAreaName ?? ''}`}
+      title={`Partenaires — ${protectedAreaName ?? ''}`}
     >
       <div className="space-y-3">
         {loading ? (
@@ -142,13 +135,13 @@ export function ProtectedAreaFundersModal({
           <>
             {entries.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Aucun bailleur. Ajoutez-en un ci-dessous.
+                Aucun partenaire. Ajoutez-en un ci-dessous.
               </p>
             )}
 
             {entries.map((entry, i) => {
               const isEditing = editingIndex === i;
-              const typeStyle = entry.type ? TYPE_STYLES[entry.type] : null;
+              const typeStyle = TYPE_STYLES[entry.type];
 
               return (
                 <div
@@ -162,7 +155,6 @@ export function ProtectedAreaFundersModal({
                     transition: 'all 0.15s',
                   }}
                 >
-                  {/* En-tête */}
                   <div
                     style={{
                       display: 'flex',
@@ -186,17 +178,17 @@ export function ProtectedAreaFundersModal({
                           color: '#0f172a',
                         }}
                       >
-                        {entry.funderId ? (
-                          getFunderLabel(entry.funderId)
+                        {entry.partnerId ? (
+                          getPartnerLabel(entry.partnerId)
                         ) : (
                           <span
                             style={{ color: '#94a3b8', fontStyle: 'italic' }}
                           >
-                            Bailleur non sélectionné
+                            Partenaire non sélectionné
                           </span>
                         )}
                       </span>
-                      {!isEditing && entry.type && typeStyle && (
+                      {!isEditing && entry.type && (
                         <span
                           style={{
                             background: typeStyle.bg,
@@ -248,17 +240,6 @@ export function ProtectedAreaFundersModal({
                           color: '#94a3b8',
                           display: 'flex',
                           alignItems: 'center',
-                          transition: 'all 0.15s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#fee2e2';
-                          e.currentTarget.style.borderColor = '#fecaca';
-                          e.currentTarget.style.color = '#dc2626';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.borderColor = '#e2e8f0';
-                          e.currentTarget.style.color = '#94a3b8';
                         }}
                       >
                         <Trash2 size={13} />
@@ -266,70 +247,69 @@ export function ProtectedAreaFundersModal({
                     </div>
                   </div>
 
-                  {/* Formulaire dépliable */}
                   {isEditing && (
                     <div style={{ padding: '14px' }} className="space-y-3">
-                      {/* Sélecteur bailleur — uniquement nouvelle entrée */}
                       {!entry.id && (
                         <div>
                           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">
-                            Bailleur / partenaire
+                            Partenaire
                           </label>
                           <select
-                            value={entry.funderId}
+                            value={entry.partnerId}
                             onChange={(e) =>
-                              update(i, { funderId: e.target.value })
+                              update(i, { partnerId: e.target.value })
                             }
                             className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           >
                             <option value="">— Choisir —</option>
-                            {funders.map((f) => (
+                            {partners.map((p) => (
                               <option
-                                key={f.id}
-                                value={f.id ?? ''}
-                                disabled={usedFunderIds(i).includes(f.id ?? '')}
+                                key={p.id}
+                                value={p.id ?? ''}
+                                disabled={usedPartnerIds(i).includes(
+                                  p.id ?? '',
+                                )}
                               >
-                                {f.name}
+                                {p.name}
                               </option>
                             ))}
                           </select>
                         </div>
                       )}
 
-                      {/* Sélecteur rôle */}
                       <div>
                         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">
-                          Rôle
+                          Type
                         </label>
                         <div className="flex flex-wrap gap-2">
-                          {(
-                            Object.keys(
-                              TYPE_LABELS,
-                            ) as ProtectedAreaFunderType[]
-                          ).map((key) => {
-                            const s = TYPE_STYLES[key];
-                            const isSelected = entry.type === key;
-                            return (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => update(i, { type: key })}
-                                style={{
-                                  background: isSelected ? s.bg : 'transparent',
-                                  color: isSelected ? s.text : '#64748b',
-                                  border: `1.5px solid ${isSelected ? s.border : '#e2e8f0'}`,
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  padding: '4px 10px',
-                                  borderRadius: 99,
-                                  cursor: 'pointer',
-                                  transition: 'all 0.15s',
-                                }}
-                              >
-                                {TYPE_LABELS[key]}
-                              </button>
-                            );
-                          })}
+                          {(Object.keys(TYPE_LABELS) as PartnerType[]).map(
+                            (key) => {
+                              const s = TYPE_STYLES[key];
+                              const isSelected = entry.type === key;
+                              return (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  onClick={() => update(i, { type: key })}
+                                  style={{
+                                    background: isSelected
+                                      ? s.bg
+                                      : 'transparent',
+                                    color: isSelected ? s.text : '#64748b',
+                                    border: `1.5px solid ${isSelected ? s.border : '#e2e8f0'}`,
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    padding: '4px 10px',
+                                    borderRadius: 99,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                  }}
+                                >
+                                  {TYPE_LABELS[key]}
+                                </button>
+                              );
+                            },
+                          )}
                         </div>
                       </div>
 
@@ -367,7 +347,7 @@ export function ProtectedAreaFundersModal({
               className="w-full gap-2"
             >
               <Plus className="w-4 h-4" />
-              Ajouter un bailleur / partenaire
+              Ajouter un partenaire
             </Button>
 
             <div className="flex justify-end gap-3 pt-2 border-t border-border">

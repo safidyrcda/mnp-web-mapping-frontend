@@ -12,6 +12,7 @@ interface PAAmountEntry {
   amount?: number;
   currency?: string;
   amountInEuro?: number;
+  note?: string;
 }
 
 interface Props {
@@ -55,6 +56,7 @@ export function FundingAmountsModal({
           amount: item.amount ?? undefined,
           currency: item.currency ?? 'EUR',
           amountInEuro: item.amountInEuro ?? undefined,
+          note: item.note ?? undefined,
         }));
 
         if (normalized.length === 0) {
@@ -345,6 +347,24 @@ export function FundingAmountsModal({
                             })
                           }
                           placeholder="ex. 450 000"
+                          className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                      </div>
+
+                      {/* Note */}
+                      <div>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">
+                          Note (optionnelle)
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.note ?? ''}
+                          onChange={(e) =>
+                            update(i, {
+                              note: e.target.value ? e.target.value : undefined,
+                            })
+                          }
+                          placeholder="Commentaire sur le financement"
                           className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>

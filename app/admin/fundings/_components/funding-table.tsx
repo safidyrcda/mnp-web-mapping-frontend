@@ -1,21 +1,18 @@
 'use client';
 
-import { Funding, Funder, Project, ProtectedArea } from '@/lib/schemas';
+import { Funding, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, DollarSign, Users } from 'lucide-react';
+import { Pencil, Trash2, DollarSign } from 'lucide-react';
 import { GetFundingsDTO } from '@/app/api/manage-data';
-import { useRouter } from 'next/navigation';
 
 interface FundingTableProps {
   fundings: GetFundingsDTO;
-  funders: Funder[];
   projects: Project[];
   protectedAreas: ProtectedArea[];
   onEdit: (funding: Funding) => void;
   onDelete: (funding: Funding) => void;
   onAddDisbursement: (fundingId: string) => void;
   onManageAmounts: (funding: GetFundingsDTO[number]) => void;
-  onManageFunders: (funding: GetFundingsDTO[number]) => void;
   filterProtectedArea?: string;
 }
 
@@ -36,7 +33,6 @@ function PAAmountCell({
     return currency ? `${s} ${currency}` : s;
   };
 
-  // Aucun filtre AP actif → résumé global
   if (!filterProtectedArea) {
     const totalAPs = funding.protectedAreaFundings?.length ?? 0;
     const withAmounts =
@@ -95,12 +91,10 @@ function PAAmountCell({
     );
   }
 
-  // Filtre AP actif → montant spécifique
   const paf = funding.protectedAreaFundings?.find(
     (p) => p.protectedArea?.id === filterProtectedArea,
   );
 
-  // Ce financement ne couvre pas l'AP filtrée
   if (!paf) {
     return (
       <span
@@ -121,7 +115,6 @@ function PAAmountCell({
 
   const hasAmount = paf.amount != null || paf.amountInEuro != null;
 
-  // AP liée mais sans montant renseigné
   if (!hasAmount) {
     return (
       <span
@@ -141,7 +134,6 @@ function PAAmountCell({
     );
   }
 
-  // Montant disponible
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {paf.amount != null && (
@@ -204,7 +196,6 @@ export function FundingTable({
   onEdit,
   onDelete,
   onManageAmounts,
-  onManageFunders,
   filterProtectedArea,
 }: FundingTableProps) {
   const formatMonthYear = (date?: Date | string) => {
@@ -361,12 +352,11 @@ export function FundingTable({
 
   const COLUMNS = [
     { label: 'Nom', width: 300 },
-    { label: 'Bailleur(s)', width: 150 },
+    { label: 'Bailleur', width: 150 },
     { label: 'Description', width: 200 },
     { label: 'Activités', width: 200 },
-    { label: 'Montant', width: 170 },
+    { label: 'Montant AP', width: 170 },
     { label: 'Début', width: 110 },
-
     { label: 'Fin', width: 110 },
     { label: 'Montant global', width: 130 },
     { label: 'Aires protégées', width: 300 },
@@ -414,7 +404,7 @@ export function FundingTable({
             <th
               className="sticky right-0"
               style={{
-                minWidth: 120,
+                minWidth: 100,
                 padding: '12px 16px',
                 textAlign: 'right',
                 fontSize: 12,
@@ -479,7 +469,7 @@ export function FundingTable({
                   </span>
                 </td>
 
-                {/* Bailleur(s) */}
+                {/* Bailleur — unique */}
                 <td
                   style={{
                     padding: '12px 16px',
@@ -490,30 +480,24 @@ export function FundingTable({
                     maxWidth: 150,
                   }}
                 >
-                  {funding.funderFundings?.length ? (
-                    <div className="flex flex-col gap-1">
-                      {funding.funderFundings.map((f) => (
-                        <span
-                          key={f.id}
-                          style={{
-                            display: 'block',
-                            background: '#f1f5f9',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: 4,
-                            padding: '3px 7px',
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: '#334155',
-                            wordBreak: 'break-word',
-                            overflowWrap: 'break-word',
-                            whiteSpace: 'normal',
-                            lineHeight: '1.5',
-                          }}
-                        >
-                          {f.funder?.name}
-                        </span>
-                      ))}
-                    </div>
+                  {funding.funder?.name ? (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        background: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: 4,
+                        padding: '3px 7px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: '#334155',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'normal',
+                        lineHeight: '1.5',
+                      }}
+                    >
+                      {funding.funder.name}
+                    </span>
                   ) : (
                     <span style={{ color: '#94a3b8' }}>—</span>
                   )}
@@ -662,16 +646,6 @@ export function FundingTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => onManageFunders(funding)}
-                      className="w-8 h-8 p-0 text-violet-600 hover:text-violet-700 hover:bg-violet-50 border-violet-200"
-                      title="Gérer les bailleurs et partenaires"
-                    >
-                      <Users className="w-3.5 h-3.5" />
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
                       onClick={() =>
                         onEdit({
                           id: funding.id,
@@ -683,15 +657,12 @@ export function FundingTable({
                           debut: funding.debut,
                           end: funding.end,
                           projectId: funding.project?.id,
+                          funderId: funding.funder?.id ?? '',
                           protectedAreaIds:
                             funding.protectedAreaFundings
                               ?.map((paf) => paf.protectedArea?.id ?? '')
                               .filter(Boolean) ?? [],
-                          funders:
-                            funding.funderFundings
-                              ?.map((ff) => ff.funder?.id ?? '')
-                              .filter(Boolean) ?? [],
-                        })
+                        } as any)
                       }
                       className="w-8 h-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                     >

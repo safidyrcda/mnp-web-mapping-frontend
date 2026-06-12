@@ -2,12 +2,13 @@
 
 import {
   Funder,
+  Partner,
   Project,
   Funding,
   ProtectedArea,
-  FunderFunding,
   Activity,
   Disbursement,
+  Partnership,
 } from '@/lib/schemas';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -40,6 +41,19 @@ export const updateFunder = async (id: string, data: Partial<Funder>) =>
 export const deleteFunder = async (id: string) =>
   apiFetch<void>(`funders/${id}`, { method: 'DELETE' });
 
+// ── PARTNERS ──────────────────────────────────────────────────────────────────
+
+export const getPartners = async () => apiFetch<Partner[]>('partners');
+export const createPartner = async (data: Omit<Partner, 'id'>) =>
+  apiFetch<Partner>('partners', { method: 'POST', body: JSON.stringify(data) });
+export const updatePartner = async (id: string, data: Partial<Partner>) =>
+  apiFetch<Partner>(`partners/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+export const deletePartner = async (id: string) =>
+  apiFetch<void>(`partners/${id}`, { method: 'DELETE' });
+
 // ── PROJECTS ──────────────────────────────────────────────────────────────────
 
 export const getProjects = async () => apiFetch<Project[]>('projects');
@@ -63,9 +77,11 @@ export type FundingItem = {
   end?: Date;
   amount?: number;
   currency?: string;
-  amountInEuro?: number; // ← ajouter
+  amountInEuro?: number;
+  funderId?: string;
   project?: Project;
-  funderFundings: FunderFunding[];
+  // ── Un seul bailleur ──
+  funder?: { id: string; name: string; fullname?: string };
   protectedAreaFundings: {
     id: string;
     protectedArea: ProtectedArea;
@@ -78,13 +94,7 @@ export type FundingItem = {
 };
 export type GetFundingsDTO = FundingItem[];
 
-export const getFundings = async () => {
-  const a = await apiFetch<GetFundingsDTO>('fundings');
-
-  console.log('Fetched fundings:', a[0]); // Log pour vérifier les données reçues
-  return a;
-};
-
+export const getFundings = async () => apiFetch<GetFundingsDTO>('fundings');
 export const createFunding = async (data: Partial<Funding>) =>
   apiFetch<Funding>('fundings', { method: 'POST', body: JSON.stringify(data) });
 export const updateFunding = async (id: string, data: Partial<Funding>) =>
@@ -150,7 +160,14 @@ export type FunderInFunding = {
   id: string;
   name: string;
   fullname?: string;
-  type?: 'funder' | 'technical_partner' | 'strategical_partner';
+};
+
+export type PartnerInProtectedArea = {
+  id: string; // id de la liaison ProtectedAreaPartner
+  partnerId: string;
+  name: string;
+  fullname?: string;
+  type: 'technical_partner' | 'strategical_partner';
 };
 
 export type FundingDetail = {
@@ -166,7 +183,8 @@ export type FundingDetail = {
   paAmountInEuro?: number;
   totalDisbursed: number;
   totalDisbursedEuro: number;
-  funders: FunderInFunding[];
+  // ── Un seul bailleur par financement ──
+  funder?: FunderInFunding;
   activities: { id: string; title?: string; description?: string }[];
   otherProtectedAreas: { id: string; sigle: string; name: string }[];
 };
@@ -186,6 +204,10 @@ export type ProtectedAreaDetail = {
   femaleClpNumber?: number;
   maleClpNumber?: number;
   fundings: FundingDetail[];
+  // ── Bailleurs uniques déduits des financements ──
+  funders: FunderInFunding[];
+  // ── Partenaires techniques / stratégiques ──
+  partners: PartnerInProtectedArea[];
 };
 
 export const getProtectedAreaDetail = async (id: string) =>
@@ -225,40 +247,61 @@ export const updateActivity = async (id: string, data: Partial<Activity>) =>
 export const deleteActivity = async (id: string) =>
   apiFetch<void>(`activities/${id}`, { method: 'DELETE' });
 
-export enum ProtectedAreaFunderType {
-  FUNDER = 'funder',
+// ── MONTANTS PAR AP (financement) ───────────────────────────────────────────
+
+export interface CreateProtectedAreaFundingDto {
+  protectedAreaId: string;
+  amount?: number;
+  currency?: string;
+  amountInEuro?: number;
+}
+
+export const fetchProtectedAreaFundings = async (fundingId: string) =>
+  apiFetch<any[]>(`fundings/${fundingId}/protected-area-fundings`);
+
+export const saveProtectedAreaFundings = async (
+  fundingId: string,
+  entries: CreateProtectedAreaFundingDto[],
+) =>
+  apiFetch<any[]>(`fundings/${fundingId}/protected-area-fundings`, {
+    method: 'PUT',
+    body: JSON.stringify({ entries }),
+  });
+
+// ── PARTENAIRES PAR AP (ProtectedAreaPartner) ───────────────────────────────
+
+export enum PartnerType {
   TECHNICAL_PARTNER = 'technical_partner',
   STRATEGICAL_PARTNER = 'strategical_partner',
 }
 
-export interface ProtectedAreaFunderEntry {
+export interface ProtectedAreaPartnerEntry {
   id?: string;
-  funderId: string;
-  type?: ProtectedAreaFunderType;
+  partnerId: string;
+  type: PartnerType;
 }
 
-export const fetchFundersByProtectedArea = async (
-  protectedAreaId: string,
-): Promise<ProtectedAreaFunderEntry[]> => {
-  const response = await fetch(
-    `${BASE_URL}/protected-area-funders/protected-area/${protectedAreaId}`,
-  );
-  if (!response.ok) throw new Error('Erreur lors du chargement des bailleurs');
-  return response.json();
-};
+export const fetchPartnersByProtectedArea = async (protectedAreaId: string) =>
+  apiFetch<any[]>(`protected-area-partners/protected-area/${protectedAreaId}`);
 
-export const saveFundersForProtectedArea = async (
+export const savePartnersForProtectedArea = async (
   protectedAreaId: string,
-  entries: ProtectedAreaFunderEntry[],
-): Promise<void> => {
-  const response = await fetch(
-    `${BASE_URL}/protected-area-funders/protected-area/${protectedAreaId}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ entries }),
-    },
-  );
-  if (!response.ok)
-    throw new Error('Erreur lors de la sauvegarde des bailleurs');
-};
+  entries: ProtectedAreaPartnerEntry[],
+) =>
+  apiFetch<any[]>(`protected-area-partners/protected-area/${protectedAreaId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ entries }),
+  });
+
+// src/app/api/manage-data.ts — ajout
+
+export const createPartnership = async (
+  data: Partial<Partnership> & {
+    activityIds?: string[];
+    newActivities?: { title: string; description?: string }[];
+  },
+) =>
+  apiFetch<Funding>('fundings/partnership', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });

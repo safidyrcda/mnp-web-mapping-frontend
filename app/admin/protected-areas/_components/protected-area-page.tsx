@@ -2,12 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Funder, ProtectedArea } from '@/lib/schemas';
-import {
-  fetchFundersByProtectedArea,
-  getFunders,
-  getProtectedAreas,
-  saveFundersForProtectedArea,
-} from '@/app/api/manage-data';
+import { getFunders, getProtectedAreas } from '@/app/api/manage-data';
 import { Button } from '@/components/ui/button';
 import { BaseModal } from '@/components/modals/base-modal';
 import {
@@ -23,7 +18,6 @@ import { toast } from 'sonner';
 import { ProtectedAreaForm } from './protected-area-form';
 import { updateProtectedArea } from '@/app/api/protected-areas/ap-api';
 import { useRouter } from 'next/navigation';
-import { ProtectedAreaFundersModal } from './protected-area-funder-modal';
 
 export function ProtectedAreaPage() {
   const router = useRouter();
@@ -650,18 +644,6 @@ export function ProtectedAreaPage() {
           loading={isLoading}
         />
       </BaseModal>
-      <ProtectedAreaFundersModal
-        open={isFundersOpen}
-        onOpenChange={setIsFundersOpen}
-        protectedAreaId={selectedAPForFunders?.id ?? ''}
-        protectedAreaName={`${selectedAPForFunders?.sigle ?? ''} – ${selectedAPForFunders?.name ?? ''}`}
-        funders={funders}
-        onLoad={fetchFundersByProtectedArea}
-        onSave={async (id, entries) => {
-          await saveFundersForProtectedArea(id, entries);
-          toast.success('Bailleurs enregistrés');
-        }}
-      />
     </div>
   );
 }

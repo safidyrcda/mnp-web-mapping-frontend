@@ -18,13 +18,21 @@ import {
   getProtectedAreas,
   createDisbursement,
   GetFundingsDTO,
+  createPartnership,
 } from '@/app/api/manage-data';
 import { FundingForm } from './funding-form';
 import { FundingTable } from './funding-table';
 import { BaseModal } from '@/components/modals/base-modal';
 import { ConfirmModal } from '@/components/modals/confirm-modal';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, X, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  X,
+  SlidersHorizontal,
+  ChevronDown,
+  Handshake,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { DisbursementForm } from '../[id]/_components/disbursement-form';
 import { FundingAmountsModal } from './funding-amounts-modal';
@@ -36,6 +44,7 @@ import {
   saveProtectedAreaFundings,
 } from '@/app/api/fundings/get-fundings-by-ap.api';
 import { useRouter } from 'next/navigation';
+import { PartnershipForm } from './create-partnership';
 
 export function FundingPage() {
   const router = useRouter();
@@ -87,6 +96,24 @@ export function FundingPage() {
     loadData();
   }, []);
 
+  const [isPartnershipOpen, setIsPartnershipOpen] = useState(false);
+
+  const handlePartnershipClick = () => setIsPartnershipOpen(true);
+
+  const handlePartnershipSubmit = async (data: any) => {
+    try {
+      setIsLoading(true);
+      await createPartnership(data);
+      toast.success('Partenariat créé avec succès');
+      setIsPartnershipOpen(false);
+      await loadData();
+    } catch {
+      toast.error('Erreur lors de la création du partenariat');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const loadData = async () => {
     try {
       setIsInitialLoading(true);
@@ -135,9 +162,7 @@ export function FundingPage() {
         const q = searchText.toLowerCase();
         const matchName = (f.name ?? '').toLowerCase().includes(q);
         const matchDesc = (f.description ?? '').toLowerCase().includes(q);
-        const matchFunder = f.funderFundings?.some((ff) =>
-          (ff.funder?.name ?? '').toLowerCase().includes(q),
-        );
+        const matchFunder = (f.funder?.name ?? '').toLowerCase().includes(q);
         const matchActivity = f.activityFundings?.some((af) =>
           (af.activity?.title ?? '').toLowerCase().includes(q),
         );
@@ -155,10 +180,7 @@ export function FundingPage() {
 
       // Bailleur
       if (filterFunder) {
-        const has = f.funderFundings?.some(
-          (ff) => ff.funder?.id === filterFunder,
-        );
-        if (!has) return false;
+        if (f.funder?.id !== filterFunder) return false;
       }
 
       // Devise
@@ -350,6 +372,24 @@ export function FundingPage() {
             }}
           >
             Gerer les aires protégées
+          </Button>
+          <Button
+            onClick={handlePartnershipClick}
+            style={{
+              background: 'linear-gradient(135deg, #166534 0%, #15803d 100%)',
+              border: 'none',
+              borderRadius: 10,
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: '0 2px 8px rgba(21,128,61,0.25)',
+            }}
+          >
+            <Handshake className="w-4 h-4" />
+            Nouveau partenariat
           </Button>
           <Button
             onClick={handleCreateClick}
@@ -724,14 +764,12 @@ export function FundingPage() {
       ) : (
         <FundingTable
           fundings={filteredFundings}
-          funders={funders}
           projects={projects}
           protectedAreas={protectedAreas}
           onEdit={handleEditClick}
           onDelete={handleDeleteClick}
           onAddDisbursement={handleAddDisbursement}
           onManageAmounts={handleManageAmounts}
-          onManageFunders={handleManageFunders}
           filterProtectedArea={filterProtectedArea}
         />
       )}
@@ -781,29 +819,7 @@ export function FundingPage() {
         }}
       />
 
-      <FundingFundersModal
-        open={isFundersOpen}
-        onOpenChange={setIsFundersOpen}
-        fundingId={selectedFundingForFunders?.id ?? ''}
-        fundingName={selectedFundingForFunders?.name}
-        funders={funders}
-        onLoad={(id) => fetchFundersByFunding(id)}
-        onSave={async (id, entries) => {
-          await saveFunderFundings(id, entries);
-          await loadData();
-          toast.success('Bailleurs enregistrés');
-        }}
-      />
-
-      <FundingFundersModal
-        open={isFundersOpen}
-        onOpenChange={setIsFundersOpen}
-        fundingId={selectedFundingForFunders?.id ?? ''}
-        fundingName={selectedFundingForFunders?.name}
-        funders={funders}
-        onLoad={(id) => fetchFundersByFunding(id)} // déjà existant
-        onSave={(id, entries) => saveFunderFundings(id, entries)}
-      />
+      {/*  */}
 
       <ConfirmModal
         open={isDeleteOpen}
@@ -815,6 +831,20 @@ export function FundingPage() {
         confirmText="Supprimer"
         isDangerous={true}
       />
+
+      <BaseModal
+        open={isPartnershipOpen}
+        onOpenChange={setIsPartnershipOpen}
+        title="Nouveau partenariat"
+      >
+        <PartnershipForm
+          funders={funders}
+          protectedAreas={protectedAreas}
+          selectedProtectedArea={filterProtectedArea || undefined}
+          onSubmit={handlePartnershipSubmit}
+          loading={isLoading}
+        />
+      </BaseModal>
     </div>
   );
 }

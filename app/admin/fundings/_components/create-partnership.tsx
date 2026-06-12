@@ -1,34 +1,36 @@
+// src/app/admin/fundings/_components/partnership-form.tsx
 'use client';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  fundingSchema,
-  type Funding,
+  partnershipSchema,
+  type Partnership,
   type Funder,
-  type Project,
   type ProtectedArea,
+  type Activity,
+  FunderFundingType,
+  FUNDER_FUNDING_TYPE_LABELS,
 } from '@/lib/schemas';
 import { FormWrapper } from '@/components/form/form-wrapper';
 import { FormInput } from '@/components/form/form-fields';
 import { FormMultiSelect } from '@/components/form-multi-select';
 import { useEffect, useState } from 'react';
-import {
-  getActivitiesByFunding,
-  getAllActivities,
-} from '@/app/api/manage-data';
-import type { Activity } from '@/lib/schemas';
+import { getAllActivities } from '@/app/api/manage-data';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Link, ChevronDown, ChevronUp } from 'lucide-react';
 
-interface FundingFormProps {
-  initialData?: Funding & { funder?: { id?: string; name?: string } };
+interface PartnershipFormProps {
   funders: Funder[];
-  projects: Project[];
   protectedAreas: ProtectedArea[];
-  onSubmit: (data: Partial<Funding>) => Promise<void>;
+  selectedProtectedArea?: string;
+  onSubmit: (
+    data: Partial<Partnership> & {
+      activityIds?: string[];
+      newActivities?: { title: string; description?: string }[];
+    },
+  ) => Promise<void>;
   loading?: boolean;
-  selectedProtectedArea: ProtectedArea['id'];
 }
 
 type ActivityMode = 'new' | 'existing';
@@ -40,93 +42,41 @@ interface ActivityEntry {
   existingId?: string;
 }
 
-export function FundingForm({
-  initialData,
+export function PartnershipForm({
   funders,
   protectedAreas,
+  selectedProtectedArea,
   onSubmit,
   loading = false,
-  selectedProtectedArea,
-}: FundingFormProps) {
-  const form = useForm<Funding>({
-    resolver: zodResolver(fundingSchema),
+}: PartnershipFormProps) {
+  const form = useForm<Partnership>({
+    resolver: zodResolver(partnershipSchema),
     defaultValues: {
       name: '',
+      description: '',
+      funderId: '',
+      fundingType: undefined,
+      protectedAreaIds: selectedProtectedArea ? [selectedProtectedArea] : [],
       debut: undefined,
       end: undefined,
-      currency: undefined,
-      amount: undefined,
-      amountInEuro: undefined,
-      funderId: '',
-      protectedAreaIds: [],
     },
   });
 
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [allActivities, setAllActivities] = useState<Activity[]>([]);
   const [activitiesOpen, setActivitiesOpen] = useState(false);
-  const [loadingActivities, setLoadingActivities] = useState(false);
-
-  // ── Reset complet à chaque ouverture ─────────────────────────────────────
-  useEffect(() => {
-    const paIds = initialData?.protectedAreaIds?.filter(Boolean) ?? [];
-
-    form.reset({
-      name: initialData?.name ?? '',
-      description: initialData?.description ?? '',
-      debut: initialData?.debut,
-      end: initialData?.end,
-      currency: initialData?.currency,
-      amount: initialData?.amount,
-      amountInEuro: initialData?.amountInEuro,
-      funderId: (initialData as any)?.funder?.id ?? initialData?.funderId ?? '',
-      protectedAreaIds:
-        paIds.length > 0
-          ? paIds
-          : selectedProtectedArea
-            ? [selectedProtectedArea]
-            : [],
-    });
-
-    setActivities([]);
-    setActivitiesOpen(false);
-  }, [initialData?.id]);
 
   useEffect(() => {
     getAllActivities().then(setAllActivities).catch(console.error);
   }, []);
 
+  // Pré-remplissage AP si filtre actif
   useEffect(() => {
-    if (!initialData?.id) return;
-
-    const paIds = initialData.protectedAreaIds?.filter(Boolean) ?? [];
-    if (paIds.length > 0) form.setValue('protectedAreaIds', paIds);
-
-    setLoadingActivities(true);
-    getActivitiesByFunding(initialData.id)
-      .then((linked: Activity[]) => {
-        setActivities(
-          linked.map((a) => ({
-            mode: 'existing' as ActivityMode,
-            existingId: a.id ?? '',
-            title: a.title,
-          })),
-        );
-        if (linked.length > 0) setActivitiesOpen(true);
-      })
-      .catch(console.error)
-      .finally(() => setLoadingActivities(false));
-  }, [initialData?.id]);
-
-  useEffect(() => {
-    if (initialData?.id) return;
     form.setValue(
       'protectedAreaIds',
       selectedProtectedArea ? [selectedProtectedArea] : [],
     );
-  }, [selectedProtectedArea, initialData?.id]);
-
-  // ── Gestionnaires activités ───────────────────────────────────────────────
+  }, [selectedProtectedArea]);
 
   const addNewActivity = () => {
     setActivities((prev) => [
@@ -149,7 +99,16 @@ export function FundingForm({
       prev.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)),
     );
 
-  const handleSubmit = async (data: Funding) => {
+  const usedExistingIds = activities
+    .filter((a) => a.mode === 'existing')
+    .map((a) => a.existingId)
+    .filter(Boolean);
+
+  const availableActivities = allActivities.filter(
+    (a) => !usedExistingIds.includes(a.id),
+  );
+
+  const handleSubmit = async (data: Partnership) => {
     const newActivities = activities
       .filter((a) => a.mode === 'new' && a.title?.trim())
       .map(({ title, description }) => ({ title: title!, description }));
@@ -160,67 +119,30 @@ export function FundingForm({
 
     await onSubmit({
       ...data,
-      id: initialData?.id,
       newActivities: newActivities.length > 0 ? newActivities : undefined,
       activityIds: activityIds.length > 0 ? activityIds : undefined,
-    } as Partial<Funding>);
+    });
   };
-
-  const usedExistingIds = activities
-    .filter((a) => a.mode === 'existing')
-    .map((a) => a.existingId)
-    .filter(Boolean);
-
-  const availableActivities = allActivities.filter(
-    (a) => !usedExistingIds.includes(a.id),
-  );
-
-  const activityCount = activities.length;
 
   return (
     <FormWrapper
       form={form}
       onSubmit={handleSubmit}
       loading={loading}
-      submitButtonText={initialData ? 'Mettre à jour' : 'Créer'}
+      submitButtonText="Créer le partenariat"
     >
       <FormInput
         control={form.control}
         name="name"
-        label="Nom du financement"
-        placeholder="ex. Financement GEF REDD+"
+        label="Nom du partenariat"
+        placeholder="ex. Partenariat technique WWF"
       />
       <FormInput
         control={form.control}
         name="description"
         label="Description"
-        placeholder="Brève description du financement…"
-        description="Optionnel — apparaîtra dans le tableau"
-      />
-
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput
-          control={form.control}
-          name="amount"
-          label="Montant"
-          type="number"
-          placeholder="ex. 500000"
-        />
-        <FormInput
-          control={form.control}
-          name="currency"
-          label="Devise"
-          placeholder="ex. USD"
-        />
-      </div>
-
-      <FormInput
-        control={form.control}
-        name="amountInEuro"
-        label="Montant en Euro (€)"
-        type="number"
-        placeholder="ex. 450000"
-        description="Saisir manuellement l'équivalent en Euro"
+        placeholder="Brève description du partenariat…"
+        description="Optionnel"
       />
 
       <div className="grid grid-cols-2 gap-4">
@@ -238,16 +160,16 @@ export function FundingForm({
         />
       </div>
 
-      {/* ── Bailleur unique ── */}
+      {/* ── Partenaire / Bailleur ── */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium">
-          Bailleur <span className="text-destructive">*</span>
+          Partenaire / Bailleur <span className="text-destructive">*</span>
         </label>
         <select
           {...form.register('funderId')}
           className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <option value="">— Sélectionner un bailleur —</option>
+          <option value="">— Sélectionner —</option>
           {funders.map((f) => (
             <option key={f.id} value={f.id ?? ''}>
               {f.name}
@@ -261,19 +183,48 @@ export function FundingForm({
         )}
       </div>
 
+      {/* ── Type de partenariat (obligatoire) ── */}
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">
+          Type de partenariat <span className="text-destructive">*</span>
+        </label>
+        <select
+          {...form.register('fundingType')}
+          className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">— Sélectionner un type —</option>
+          {Object.values(FunderFundingType).map((type) => (
+            <option key={type} value={type}>
+              {FUNDER_FUNDING_TYPE_LABELS[type]}
+            </option>
+          ))}
+        </select>
+        {form.formState.errors.fundingType && (
+          <p className="text-xs text-destructive">
+            {form.formState.errors.fundingType.message}
+          </p>
+        )}
+      </div>
+
+      {/* ── Aires protégées ── */}
       <FormMultiSelect
         control={form.control}
         name="protectedAreaIds"
         label="Aires protégées"
         placeholder="Sélectionner une ou plusieurs aires protégées"
-        description="Aires protégées concernées par ce financement"
+        description="Sites concernés par ce partenariat"
         options={protectedAreas.map((pa) => ({
           value: pa.id || '',
           label: `${pa.sigle} – ${pa.name}`,
         }))}
       />
+      {form.formState.errors.protectedAreaIds && (
+        <p className="text-xs text-destructive">
+          {form.formState.errors.protectedAreaIds.message as string}
+        </p>
+      )}
 
-      {/* ── Section Activités ── */}
+      {/* ── Section Activités (optionnelle) ── */}
       <div className="border border-border rounded-lg overflow-hidden">
         <button
           type="button"
@@ -282,13 +233,10 @@ export function FundingForm({
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">Activités</span>
-            {activityCount > 0 && (
+            {activities.length > 0 && (
               <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                {activityCount}
+                {activities.length}
               </span>
-            )}
-            {loadingActivities && (
-              <span className="text-xs text-muted-foreground">Chargement…</span>
             )}
           </div>
           {activitiesOpen ? (
@@ -302,12 +250,12 @@ export function FundingForm({
           <div className="p-4 space-y-3">
             {activities.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-2">
-                Aucune activité ajoutée. Utilisez les boutons ci-dessous.
+                Aucune activité ajoutée (optionnel).
               </p>
             )}
 
             {activities.map((entry, index) => (
-              <ActivityRow
+              <PartnershipActivityRow
                 key={index}
                 entry={entry}
                 availableActivities={availableActivities}
@@ -347,7 +295,7 @@ export function FundingForm({
   );
 }
 
-// ─── ActivityRow ──────────────────────────────────────────────────────────────
+// ─── PartnershipActivityRow ──────────────────────────────────────────────────
 
 interface ActivityRowProps {
   entry: ActivityEntry;
@@ -357,7 +305,7 @@ interface ActivityRowProps {
   onRemove: () => void;
 }
 
-function ActivityRow({
+function PartnershipActivityRow({
   entry,
   availableActivities,
   allActivities,
@@ -419,11 +367,6 @@ function ActivityRow({
               </option>
             ))}
           </select>
-          {entry.description && (
-            <p className="text-xs text-muted-foreground italic px-1">
-              {entry.description}
-            </p>
-          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -435,7 +378,7 @@ function ActivityRow({
               type="text"
               value={entry.title ?? ''}
               onChange={(e) => onChange({ title: e.target.value })}
-              placeholder="ex. Restauration et reboisement"
+              placeholder="ex. Appui institutionnel"
               className="mt-1 w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -446,7 +389,6 @@ function ActivityRow({
             <textarea
               value={entry.description ?? ''}
               onChange={(e) => onChange({ description: e.target.value })}
-              placeholder="Description détaillée de l'activité…"
               rows={2}
               className="mt-1 w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
