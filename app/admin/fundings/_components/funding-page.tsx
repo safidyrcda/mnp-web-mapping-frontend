@@ -7,6 +7,8 @@ import {
   Project,
   ProtectedArea,
   Disbursement,
+  Partnership,
+  FundingType,
 } from '@/lib/schemas';
 import {
   getFundings,
@@ -18,7 +20,7 @@ import {
   getProtectedAreas,
   createDisbursement,
   GetFundingsDTO,
-  createPartnership,
+  FundingItem,
 } from '@/app/api/manage-data';
 import { FundingForm } from './funding-form';
 import { FundingTable } from './funding-table';
@@ -44,7 +46,7 @@ import {
   saveProtectedAreaFundings,
 } from '@/app/api/fundings/get-fundings-by-ap.api';
 import { useRouter } from 'next/navigation';
-import { PartnershipForm } from './create-partnership';
+import { PartnershipForm } from './partnership-form';
 
 export function FundingPage() {
   const router = useRouter();
@@ -64,7 +66,9 @@ export function FundingPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── Modale état ───────────────────────────────────────────────────────────
-  const [selectedFunding, setSelectedFunding] = useState<Funding | null>(null);
+  const [selectedFunding, setSelectedFunding] = useState<FundingItem | null>(
+    null,
+  );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -100,15 +104,20 @@ export function FundingPage() {
 
   const handlePartnershipClick = () => setIsPartnershipOpen(true);
 
-  const handlePartnershipSubmit = async (data: any) => {
+  const handlePartnershipSubmit = async (data: Partial<Partnership>) => {
     try {
       setIsLoading(true);
-      await createPartnership(data);
-      toast.success('Partenariat créé avec succès');
+      if (selectedFunding?.id) {
+        await updateFunding(selectedFunding.id, data);
+        toast.success('Partenariat mis à jour avec succès');
+      } else {
+        await createFunding(data); // ← pas createPartnership
+        toast.success('Partenariat créé avec succès');
+      }
       setIsPartnershipOpen(false);
       await loadData();
     } catch {
-      toast.error('Erreur lors de la création du partenariat');
+      toast.error('Erreur lors de la sauvegarde');
     } finally {
       setIsLoading(false);
     }
@@ -233,11 +242,16 @@ export function FundingPage() {
     setSelectedFunding(null);
     setIsFormOpen(true);
   };
-  const handleEditClick = (funding: Funding) => {
+  const handleEditClick = (funding: FundingItem) => {
     setSelectedFunding(funding);
-    setIsFormOpen(true);
+
+    if (!funding.fundingType || funding.fundingType === FundingType.FUNDER) {
+      setIsFormOpen(true);
+    } else {
+      setIsPartnershipOpen(true);
+    }
   };
-  const handleDeleteClick = (funding: Funding) => {
+  const handleDeleteClick = (funding: FundingItem) => {
     setSelectedFunding(funding);
     setIsDeleteOpen(true);
   };
@@ -835,12 +849,15 @@ export function FundingPage() {
       <BaseModal
         open={isPartnershipOpen}
         onOpenChange={setIsPartnershipOpen}
-        title="Nouveau partenariat"
+        title={
+          selectedFunding ? 'Modifier le partenariat' : 'Nouveau partenariat'
+        }
       >
         <PartnershipForm
+          initialData={selectedFunding || undefined}
           funders={funders}
           protectedAreas={protectedAreas}
-          selectedProtectedArea={filterProtectedArea || undefined}
+          selectedProtectedArea={filterProtectedArea}
           onSubmit={handlePartnershipSubmit}
           loading={isLoading}
         />

@@ -5,10 +5,11 @@ import {
   Partner,
   Project,
   Funding,
+  Partnership,
   ProtectedArea,
   Activity,
   Disbursement,
-  Partnership,
+  FundingType,
 } from '@/lib/schemas';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -78,9 +79,8 @@ export type FundingItem = {
   amount?: number;
   currency?: string;
   amountInEuro?: number;
-  funderId?: string;
+  fundingType?: FundingType;
   project?: Project;
-  // ── Un seul bailleur ──
   funder?: { id: string; name: string; fullname?: string };
   protectedAreaFundings: {
     id: string;
@@ -95,13 +95,21 @@ export type FundingItem = {
 export type GetFundingsDTO = FundingItem[];
 
 export const getFundings = async () => apiFetch<GetFundingsDTO>('fundings');
-export const createFunding = async (data: Partial<Funding>) =>
+
+export const createFunding = async (
+  data: Partial<Funding> | Partial<Partnership>,
+) =>
   apiFetch<Funding>('fundings', { method: 'POST', body: JSON.stringify(data) });
-export const updateFunding = async (id: string, data: Partial<Funding>) =>
+
+export const updateFunding = async (
+  id: string,
+  data: Partial<Funding> | Partial<Partnership>,
+) =>
   apiFetch<Funding>(`fundings/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
+
 export const deleteFunding = async (id: string) =>
   apiFetch<void>(`fundings/${id}`, { method: 'DELETE' });
 
@@ -163,7 +171,7 @@ export type FunderInFunding = {
 };
 
 export type PartnerInProtectedArea = {
-  id: string; // id de la liaison ProtectedAreaPartner
+  id: string;
   partnerId: string;
   name: string;
   fullname?: string;
@@ -183,7 +191,7 @@ export type FundingDetail = {
   paAmountInEuro?: number;
   totalDisbursed: number;
   totalDisbursedEuro: number;
-  // ── Un seul bailleur par financement ──
+  fundingType?: FundingType;
   funder?: FunderInFunding;
   activities: { id: string; title?: string; description?: string }[];
   otherProtectedAreas: { id: string; sigle: string; name: string }[];
@@ -204,9 +212,7 @@ export type ProtectedAreaDetail = {
   femaleClpNumber?: number;
   maleClpNumber?: number;
   fundings: FundingDetail[];
-  // ── Bailleurs uniques déduits des financements ──
   funders: FunderInFunding[];
-  // ── Partenaires techniques / stratégiques ──
   partners: PartnerInProtectedArea[];
 };
 
@@ -291,17 +297,4 @@ export const savePartnersForProtectedArea = async (
   apiFetch<any[]>(`protected-area-partners/protected-area/${protectedAreaId}`, {
     method: 'PUT',
     body: JSON.stringify({ entries }),
-  });
-
-// src/app/api/manage-data.ts — ajout
-
-export const createPartnership = async (
-  data: Partial<Partnership> & {
-    activityIds?: string[];
-    newActivities?: { title: string; description?: string }[];
-  },
-) =>
-  apiFetch<Funding>('fundings/partnership', {
-    method: 'POST',
-    body: JSON.stringify(data),
   });

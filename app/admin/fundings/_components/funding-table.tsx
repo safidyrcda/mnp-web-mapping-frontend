@@ -3,11 +3,10 @@
 import { Funding, Project, ProtectedArea } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, DollarSign } from 'lucide-react';
-import { GetFundingsDTO } from '@/app/api/manage-data';
-import { ProtectedAreaPartnerEntry } from '@/app/api/manage-data';
-
-// ── Composant FunderPartnersCell ────────────────────────────────────────────
-// À placer avant le composant principal FundingTable, après PAAmountCell
+import {
+  GetFundingsDTO,
+  ProtectedAreaPartnerEntry,
+} from '@/app/api/manage-data';
 
 const PARTNER_TYPE_STYLES: Record<
   string,
@@ -23,28 +22,30 @@ const PARTNER_TYPE_STYLES: Record<
     bg: '#f0fdf4',
     text: '#15803d',
     border: '#86efac',
-    label: 'Part. technique',
+    label: 'Partenaire technique',
   },
   strategical_partner: {
     bg: '#fdf4ff',
     text: '#7e22ce',
     border: '#e9d5ff',
-    label: 'Part. stratégique',
+    label: 'Partenaire stratégique',
   },
 };
+
+// ── Props ──────────────────────────────────────────────────────────────────
 
 interface FundingTableProps {
   fundings: GetFundingsDTO;
   projects: Project[];
   protectedAreas: ProtectedArea[];
-  onEdit: (funding: Funding) => void;
-  onDelete: (funding: Funding) => void;
+  onEdit: (funding: GetFundingsDTO[number]) => void; // ← FundingItem
+  onDelete: (funding: GetFundingsDTO[number]) => void; // ← FundingItem
   onAddDisbursement: (fundingId: string) => void;
   onManageAmounts: (funding: GetFundingsDTO[number]) => void;
   filterProtectedArea?: string;
 }
 
-// ── Montant par AP ────────────────────────────────────────────────────────────
+// ── Bailleur + Partenaires ──────────────────────────────────────────────────
 
 function FunderPartnersCell({
   funding,
@@ -55,27 +56,27 @@ function FunderPartnersCell({
 }) {
   const pills: { label: string; fullname?: string; type: string }[] = [];
 
-  // Le bailleur principal du financement (relation funder)
+  // Le bailleur principal du financement → typé par fundingType
   if (funding.funder?.name) {
     pills.push({
       label: funding.funder.name,
       fullname: funding.funder.fullname,
-      type: 'funder',
+      type: funding.fundingType ?? 'funder',
     });
   }
 
-  // Les partenaires de l'AP filtrée (relation protectedAreaPartner)
+  // Les partenaires de l'AP filtrée → typés individuellement (technical_partner / strategical_partner)
   if (filterProtectedArea) {
     const paf = funding.protectedAreaFundings?.find(
       (p) => p.protectedArea?.id === filterProtectedArea,
     );
-    const partners: ProtectedAreaPartnerEntry[] =
-      (paf?.protectedArea as any)?.partners ?? [];
+    const partners: any[] =
+      (paf?.protectedArea as any)?.protectedAreaPartners ?? [];
 
     partners.forEach((p: any) => {
       pills.push({
-        label: p.partner?.name ?? p.name ?? '?',
-        fullname: p.partner?.fullname ?? p.fullname,
+        label: p.funder?.name ?? p.name ?? '?',
+        fullname: p.funder?.fullname ?? p.fullname,
         type: p.type,
       });
     });
@@ -127,6 +128,8 @@ function FunderPartnersCell({
     </div>
   );
 }
+
+// ── Montant par AP ────────────────────────────────────────────────────────────
 
 function PAAmountCell({
   funding,
@@ -462,7 +465,7 @@ export function FundingTable({
 
   const COLUMNS = [
     { label: 'Nom', width: 300 },
-    { label: 'Bailleur', width: 150 },
+    { label: 'Bailleur / Partenaires', width: 180 },
     { label: 'Description', width: 200 },
     { label: 'Activités', width: 200 },
     { label: 'Montant AP', width: 170 },
@@ -579,6 +582,7 @@ export function FundingTable({
                   </span>
                 </td>
 
+                {/* Bailleur + Partenaires */}
                 <td
                   style={{
                     padding: '12px 16px',
@@ -738,24 +742,7 @@ export function FundingTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        onEdit({
-                          id: funding.id,
-                          name: funding.name,
-                          description: funding.description,
-                          amount: funding.amount,
-                          currency: funding.currency,
-                          amountInEuro: funding.amountInEuro,
-                          debut: funding.debut,
-                          end: funding.end,
-                          projectId: funding.project?.id,
-                          funderId: funding.funder?.id ?? '',
-                          protectedAreaIds:
-                            funding.protectedAreaFundings
-                              ?.map((paf) => paf.protectedArea?.id ?? '')
-                              .filter(Boolean) ?? [],
-                        } as any)
-                      }
+                      onClick={() => onEdit(funding)}
                       className="w-8 h-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                     >
                       <Pencil className="w-3.5 h-3.5" />

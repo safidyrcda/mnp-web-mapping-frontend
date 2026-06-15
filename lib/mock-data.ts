@@ -80,26 +80,7 @@ export const mockProjects: Project[] = [
   },
 ];
 
-export const mockFundings: Funding[] = [
-  {
-    id: '770e8400-e29b-41d4-a716-446655440000',
-    name: 'Financement GEF REDD+',
-
-    projectId: '660e8400-e29b-41d4-a716-446655440000',
-  },
-  {
-    id: '770e8400-e29b-41d4-a716-446655440001',
-    name: 'Financement PNUD Biodiversité',
-
-    projectId: '660e8400-e29b-41d4-a716-446655440002',
-  },
-  {
-    id: '770e8400-e29b-41d4-a716-446655440002',
-    name: 'Financement KfW Côtier',
-
-    projectId: '660e8400-e29b-41d4-a716-446655440001',
-  },
-];
+export const mockFundings: Funding[] = [];
 
 let funders = [...mockFunders];
 let projects = [...mockProjects];

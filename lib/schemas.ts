@@ -36,7 +36,6 @@ const protectedAreaFundingSchema = z.object({
   amount: z.number().optional().nullable(),
   currency: z.string().optional().nullable(),
   amountInEuro: z.number().optional().nullable(),
-  note: z.string().optional().nullable(),
 });
 export type ProtectedAreaFunding = z.infer<typeof protectedAreaFundingSchema>;
 
@@ -58,16 +57,33 @@ export const disbursementSchema = z.object({
 });
 export type Disbursement = z.infer<typeof disbursementSchema>;
 
+// ── Types de financement / partenariat ──────────────────────────────────────
+
+export enum FundingType {
+  FUNDER = 'funder',
+  TECHNICAL_PARTNER = 'technical_partner',
+  STRATEGICAL_PARTNER = 'strategical_partner',
+  TECHNICAL_AND_FUNDER = 'technical_and_funder',
+}
+
+export const FUNDING_TYPE_LABELS: Record<FundingType, string> = {
+  [FundingType.FUNDER]: 'Bailleur',
+  [FundingType.TECHNICAL_PARTNER]: 'Partenaire technique',
+  [FundingType.STRATEGICAL_PARTNER]: 'Partenaire stratégique',
+  [FundingType.TECHNICAL_AND_FUNDER]: 'Bailleur & Partenaire technique',
+};
+
+// ── Financement (fundingType = FUNDER, fixé) ────────────────────────────────
+
 export const fundingSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
-  // ── Un seul bailleur par financement ──
   funderId: z
     .string()
     .uuid('Veuillez sélectionner un bailleur')
-    .min(1, 'Le bailleur est requis')
-    .optional(),
+    .min(1, 'Le bailleur est requis'),
+  fundingType: z.literal(FundingType.FUNDER).default(FundingType.FUNDER),
   protectedAreaIds: z
     .array(z.string().uuid())
     .min(1, 'Au moins une aire protégée doit être sélectionnée')
@@ -82,21 +98,7 @@ export const fundingSchema = z.object({
 });
 export type Funding = z.infer<typeof fundingSchema>;
 
-// src/lib/schemas.ts — ajouts
-
-export enum FundingType {
-  FUNDER = 'funder',
-  TECHNICAL_PARTNER = 'technical_partner',
-  STRATEGICAL_PARTNER = 'strategical_partner',
-  TECHNICAL_AND_FUNDER = 'technical_and_funder',
-}
-
-export const FUNDING_TYPE_LABELS: Record<FundingType, string> = {
-  [FundingType.FUNDER]: 'Bailleur',
-  [FundingType.TECHNICAL_PARTNER]: 'Partenaire technique',
-  [FundingType.STRATEGICAL_PARTNER]: 'Partenaire stratégique',
-  [FundingType.TECHNICAL_AND_FUNDER]: 'Bailleur et partenaire technique',
-};
+// ── Partenariat (fundingType ≠ FUNDER) ──────────────────────────────────────
 
 export const partnershipSchema = z.object({
   id: z.string().uuid().optional(),
@@ -104,15 +106,28 @@ export const partnershipSchema = z.object({
   description: z.string().optional().nullable(),
   funderId: z
     .string()
-    .uuid('Veuillez sélectionner un bailleur/partenaire')
+    .uuid('Veuillez sélectionner un partenaire')
     .min(1, 'Le partenaire est requis'),
-  fundingType: z.nativeEnum(FundingType, {
-    errorMap: () => ({ message: 'Le type de partenariat est requis' }),
-  }),
+  fundingType: z.enum(
+    [
+      FundingType.TECHNICAL_PARTNER,
+      FundingType.STRATEGICAL_PARTNER,
+      FundingType.TECHNICAL_AND_FUNDER,
+    ],
+    {
+      errorMap: () => ({
+        message: 'Veuillez sélectionner un type de partenariat',
+      }),
+    },
+  ),
   protectedAreaIds: z
     .array(z.string().uuid())
     .min(1, 'Au moins une aire protégée doit être sélectionnée'),
   debut: z.coerce.date().optional().nullable(),
   end: z.coerce.date().optional().nullable(),
+  // utile uniquement pour TECHNICAL_AND_FUNDER
+  amount: z.coerce.number().optional().nullable(),
+  currency: z.string().optional().nullable(),
+  amountInEuro: z.coerce.number().nullable().optional(),
 });
 export type Partnership = z.infer<typeof partnershipSchema>;
