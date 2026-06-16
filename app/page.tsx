@@ -5,7 +5,7 @@ import LegendSearch from './_components/legend-search';
 import OpenLayersMap from './_components/op-layers';
 import { useState } from 'react';
 import Link from 'next/link';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, List } from 'lucide-react';
 
 export default function Page() {
   const [selectedArea, setSelectedArea] = useState<ProtectedArea | undefined>();
@@ -32,9 +32,35 @@ export default function Page() {
         }}
         className="w-full px-4 md:px-8 py-2 flex justify-end items-center gap-3"
       >
-        <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>
+        <Link
+          href="/fundings"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: 8,
+            padding: '5px 14px',
+            color: 'white',
+            fontSize: 12,
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')
+          }
+        >
+          <List size={14} />
+          Détails de financements
+        </Link>
+        {/* <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>
           Espace administration
-        </span>
+        </span> */}
         <Link
           href="/admin/fundings"
           style={{
@@ -59,7 +85,7 @@ export default function Page() {
           }
         >
           <BarChart3 size={14} />
-          Financements
+          Administration
         </Link>
       </div>
 
