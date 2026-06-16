@@ -555,7 +555,7 @@ export function FundingPage() {
 
               {/* Bailleur */}
               <FilterSelect
-                label="Bailleur"
+                label="Bailleur / Partenaire"
                 value={filterFunder}
                 onChange={setFilterFunder}
                 placeholder="Tous"

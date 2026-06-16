@@ -230,20 +230,38 @@ function PAAmountCell({
 
   if (!hasAmount) {
     return (
-      <span
-        style={{
-          fontSize: 11,
-          color: '#b45309',
-          background: '#fffbeb',
-          border: '1px solid #fcd34d',
-          borderRadius: 6,
-          padding: '2px 8px',
-          fontWeight: 600,
-          display: 'inline-block',
-        }}
-      >
-        Montant non renseigné
-      </span>
+      <>
+        <span
+          style={{
+            fontSize: 11,
+            color: '#b45309',
+            background: '#fffbeb',
+            border: '1px solid #fcd34d',
+            borderRadius: 6,
+            padding: '2px 8px',
+            fontWeight: 600,
+            display: 'inline-block',
+          }}
+        >
+          Montant non renseigné
+        </span>
+        {(paf as any).note && (
+          <span
+            style={{
+              fontSize: 12,
+              color: '#000',
+
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 4,
+              padding: '2px 6px',
+              lineHeight: '1.4',
+            }}
+          >
+            Note: {(paf as any).note}
+          </span>
+        )}
+      </>
     );
   }
 
@@ -298,6 +316,23 @@ function PAAmountCell({
             {fmt(paf.amountInEuro, 'EUR')}
           </span>
         )}
+
+      {(paf as any).note && (
+        <span
+          style={{
+            fontSize: 12,
+            color: '#000',
+
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: 4,
+            padding: '2px 6px',
+            lineHeight: '1.4',
+          }}
+        >
+          Note: {(paf as any).note}
+        </span>
+      )}
     </div>
   );
 }

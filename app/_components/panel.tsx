@@ -373,14 +373,14 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                   value={allFunders.length > 0 ? `${allFunders.length}` : '—'}
                   accent="#1565c0"
                 /> */}
-                {activeUntil && (
+                {/* {activeUntil && (
                   <MetricCard
                     icon={<Calendar size={15} color="#00695c" />}
                     label="Actif jusqu'à"
                     value={formatYear(activeUntil) ?? '—'}
                     accent="#00695c"
                   />
-                )}
+                )} */}
                 {detail?.populationCount && (
                   <MetricCard
                     icon={<PersonStanding size={15} color="#7c3aed" />}

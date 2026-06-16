@@ -192,6 +192,7 @@ export type FundingDetail = {
   totalDisbursed: number;
   totalDisbursedEuro: number;
   fundingType?: FundingType;
+  paNote?: string;
   funder?: FunderInFunding;
   activities: { id: string; title?: string; description?: string }[];
   otherProtectedAreas: { id: string; sigle: string; name: string }[];

@@ -283,6 +283,22 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
                       ≈ {fmt(funding.paAmountInEuro, 'EUR')}
                     </p>
                   )}
+                {funding.paNote && (
+                  <p
+                    className="text-[14px] italic text-left mt-1"
+                    style={{
+                      color: colors.teal[600],
+                      background: colors.teal[50],
+                      border: `0.5px solid ${colors.teal[100]}`,
+                      borderRadius: 4,
+                      padding: '3px 7px',
+                      maxWidth: 200,
+                      lineHeight: '1.4',
+                    }}
+                  >
+                    Note: {funding.paNote}
+                  </p>
+                )}
                 {/* Montant global en plus petit si différent */}
                 {hasGlobalAmount && (
                   <p
