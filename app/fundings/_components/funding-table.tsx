@@ -452,7 +452,7 @@ export function FundingTable({
         {visible.map((paf) => {
           const c = paColor(paf.protectedArea?.sigle);
           const label =
-            paf.protectedArea?.sigle ?? paf.protectedArea?.name ?? '?';
+            paf.protectedArea?.name ?? paf.protectedArea?.sigle ?? '?';
           return (
             <span
               key={paf.id}
