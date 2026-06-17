@@ -394,7 +394,7 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                   style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
                 >
                   <LocalisationRow
-                    label="Région"
+                    label="Régions"
                     values={detail?.regions ?? []}
                     color="#1e4976"
                   />
