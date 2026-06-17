@@ -105,24 +105,6 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
 
   const colors = statusColor(properties.status);
 
-  // // ── Agrégations ──────────────────────────────────────────────────────────
-  // const allFunders = detail
-  //   ? [
-  //       ...new Map(
-  //         detail.fundings.flatMap((f) => f.funders).map((fu) => [fu.id, fu]),
-  //       ).values(),
-  //     ]
-  //   : [];
-
-  // Séparer par type
-  // const fundersByType = {
-  //   funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
-  //   technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
-  //   strategical_partner: allFunders.filter(
-  //     (f) => f.type === 'strategical_partner',
-  //   ),
-  // };
-
   const totalFundings = detail?.fundings?.length ?? 0;
   const activeUntil = detail?.fundings
     ?.map((f) => f.end)
@@ -367,12 +349,6 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                   value={totalFundings > 0 ? `${totalFundings}` : '—'}
                   accent="#2d5a40"
                 />
-                {/* <MetricCard
-                  icon={<Users size={15} color="#1565c0" />}
-                  label="Bailleurs"
-                  value={allFunders.length > 0 ? `${allFunders.length}` : '—'}
-                  accent="#1565c0"
-                /> */}
                 {/* {activeUntil && (
                   <MetricCard
                     icon={<Calendar size={15} color="#00695c" />}
@@ -412,104 +388,28 @@ export default function FeaturePanel({ feature, onClose }: FeaturePanelProps) {
                 )}
               </div>
 
-              {/* ── Localisation ── */}
-              {(detail?.region?.length ||
-                detail?.districts?.length ||
-                detail?.communes?.length) && (
-                <Section title="Localisation">
-                  <div
-                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-                  >
-                    {detail?.region?.length && (
-                      <LocalisationRow
-                        label="Région"
-                        values={detail.region}
-                        color="#1e4976"
-                      />
-                    )}
-                    {detail?.districts?.length && (
-                      <LocalisationRow
-                        label="Districts"
-                        values={detail.districts}
-                        color="#0e7490"
-                      />
-                    )}
-                    {detail?.communes?.length && (
-                      <LocalisationRow
-                        label="Communes"
-                        values={detail.communes}
-                        color="#6d28d9"
-                      />
-                    )}
-                  </div>
-                </Section>
-              )}
-
-              {/* ── Bailleurs / Partenaires séparés par type ── */}
-              {/* {allFunders.length > 0 && (
-                <Section title="Bailleurs & Partenaires">
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 12,
-                    }}
-                  >
-                    {(
-                      [
-                        'funder',
-                        'technical_partner',
-                        'strategical_partner',
-                      ] as FunderType[]
-                    ).map((type) => {
-                      const group = fundersByType[type];
-                      if (group.length === 0) return null;
-                      const style = FUNDER_TYPE_STYLES[type];
-                      return (
-                        <div key={type}>
-                          <p
-                            style={{
-                              margin: '0 0 6px',
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: style.text,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.08em',
-                            }}
-                          >
-                            {style.label}s ({group.length})
-                          </p>
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 6,
-                            }}
-                          >
-                            {group.map((fu) => (
-                              <span
-                                key={fu.id}
-                                title={fu.fullname}
-                                style={{
-                                  background: style.bg,
-                                  color: style.text,
-                                  border: `1px solid ${style.border}`,
-                                  fontSize: 12,
-                                  fontWeight: 600,
-                                  padding: '4px 10px',
-                                  borderRadius: 6,
-                                }}
-                              >
-                                {fu.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Section>
-              )} */}
+              {/* ── Localisation — toujours affichée ── */}
+              <Section title="Localisation">
+                <div
+                  style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                >
+                  <LocalisationRow
+                    label="Région"
+                    values={detail?.regions ?? []}
+                    color="#1e4976"
+                  />
+                  <LocalisationRow
+                    label="Districts"
+                    values={detail?.districts ?? []}
+                    color="#0e7490"
+                  />
+                  <LocalisationRow
+                    label="Communes"
+                    values={detail?.communes ?? []}
+                    color="#6d28d9"
+                  />
+                </div>
+              </Section>
 
               {/* ── Financements ── */}
               {detail && detail.fundings.length > 0 && (
@@ -702,6 +602,7 @@ function LocalisationRow({
   values: string[];
   color: string;
 }) {
+  console.log(values);
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
       <span
@@ -718,22 +619,35 @@ function LocalisationRow({
         {label}
       </span>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-        {values.map((v) => (
+        {values.length > 0 ? (
+          values.map((v) => (
+            <span
+              key={v}
+              style={{
+                background: '#f8fafc',
+                color,
+                border: '1px solid #e2e8f0',
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: 5,
+              }}
+            >
+              {v}
+            </span>
+          ))
+        ) : (
           <span
-            key={v}
             style={{
-              background: '#f8fafc',
-              color,
-              border: '1px solid #e2e8f0',
               fontSize: 11,
-              fontWeight: 600,
-              padding: '2px 8px',
-              borderRadius: 5,
+              color: '#cbd5e1',
+              fontStyle: 'italic',
+              paddingTop: 2,
             }}
           >
-            {v}
+            Non renseigné
           </span>
-        ))}
+        )}
       </div>
     </div>
   );

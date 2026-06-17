@@ -570,11 +570,11 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
             </p>
 
             {/* Localisation */}
-            {(data.region?.length ||
+            {(data.regions?.length ||
               data.districts?.length ||
               data.communes?.length) && (
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {data.region?.map((r) => (
+                {data.regions?.map((r) => (
                   <span
                     key={r}
                     className="text-[11px] px-2 py-0.5 rounded-full font-medium"

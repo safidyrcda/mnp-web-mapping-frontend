@@ -206,7 +206,7 @@ export type ProtectedAreaDetail = {
   size?: number;
   superficie?: number;
   creationYear?: number;
-  region?: string[];
+  regions?: string[];
   districts?: string[];
   communes?: string[];
   populationCount?: number;
