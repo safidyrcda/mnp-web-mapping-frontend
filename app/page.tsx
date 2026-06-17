@@ -14,6 +14,10 @@ export default function Page() {
     setSelectedArea(area);
   };
 
+  const handleClosePanel = () => {
+    setSelectedArea(undefined);
+  };
+
   return (
     <main
       className="min-h-screen flex flex-col"
@@ -194,7 +198,10 @@ export default function Page() {
                     </span>
                   )}
                 </div>
-                <OpenLayersMap selectedArea={selectedArea} />
+                <OpenLayersMap
+                  selectedArea={selectedArea}
+                  onClosePanel={handleClosePanel}
+                />
               </div>
             </div>
           </div>

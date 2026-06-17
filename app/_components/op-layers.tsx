@@ -24,9 +24,10 @@ import { Loader2 } from 'lucide-react';
 
 type Props = {
   selectedArea?: ProtectedArea;
+  onClosePanel?: () => void;
 };
 
-export default function OpenLayersMap({ selectedArea }: Props) {
+export default function OpenLayersMap({ selectedArea, onClosePanel }: Props) {
   const [selectedFeature, setSelectedFeature] = useState<any>(null);
 
   const mapRef = useRef<Map | null>(null);
@@ -195,13 +196,15 @@ export default function OpenLayersMap({ selectedArea }: Props) {
     };
   }, []);
 
-  const onClosePanel = () => {
+  const closePanel = () => {
     if (lastSelectedFeatureRef.current) {
       lastSelectedFeatureRef.current.setStyle(undefined);
       lastSelectedFeatureRef.current = null;
     }
 
     setSelectedFeature(null);
+
+    onClosePanel?.();
 
     const map = mapRef.current;
     const extent = initialExtentRef.current;
@@ -259,7 +262,7 @@ export default function OpenLayersMap({ selectedArea }: Props) {
 
       {/* Side panel — rendered in a portal-like fixed position, no OL overlay needed */}
       {selectedFeature && !isLoadingSelection && (
-        <FeaturePanel feature={selectedFeature} onClose={onClosePanel} />
+        <FeaturePanel feature={selectedFeature} onClose={closePanel} />
       )}
     </div>
   );
