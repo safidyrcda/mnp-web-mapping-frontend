@@ -159,6 +159,60 @@ function StatCard({
   );
 }
 
+// ─── LocalisationRow ────────────────────────────────────────────────────────
+
+function LocalisationRow({
+  label,
+  values,
+  color,
+}: {
+  label: string;
+  values: string[];
+  color: string;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+      <span
+        className="text-[11px] font-bold uppercase tracking-wider"
+        style={{ color: '#94a3b8', minWidth: 64, paddingTop: 3 }}
+      >
+        {label}
+      </span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        {values.length > 0 ? (
+          values.map((v) => (
+            <span
+              key={v}
+              style={{
+                background: '#f8fafc',
+                color,
+                border: '1px solid #e2e8f0',
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: 5,
+              }}
+            >
+              {v}
+            </span>
+          ))
+        ) : (
+          <span
+            style={{
+              fontSize: 11,
+              color: '#cbd5e1',
+              fontStyle: 'italic',
+              paddingTop: 2,
+            }}
+          >
+            Non renseigné
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── FunderGroup ──────────────────────────────────────────────────────────────
 
 function FunderGroup({
@@ -208,24 +262,10 @@ function FunderGroup({
 function FundingCard({ funding }: { funding: FundingDetail }) {
   const dur = duration(funding.debut, funding.end);
 
-  console.log('FundingCard', funding);
-
   const hasGlobalAmount =
     funding.globalAmount != null &&
     (funding.globalAmount !== funding.paAmount ||
       funding.globalCurrency !== funding.paCurrency);
-
-  // const fundersByType = {
-  //   funder: funding.funders.filter((f) => !f.type || f.type === 'funder'),
-  //   technical_partner: funding.funders.filter(
-  //     (f) => f.type === 'technical_partner',
-  //   ),
-  //   strategical_partner: funding.funders.filter(
-  //     (f) => f.type === 'strategical_partner',
-  //   ),
-  // };
-
-  // const hasAnyFunder = funding.funders.length > 0;
 
   return (
     <div
@@ -268,7 +308,6 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
 
           {/* ── Montants ── */}
           <div className="text-right shrink-0 space-y-1">
-            {/* Montant PA (principal) */}
             {funding.paAmount != null ? (
               <>
                 <p
@@ -299,7 +338,6 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
                     Note: {funding.paNote}
                   </p>
                 )}
-                {/* Montant global en plus petit si différent */}
                 {hasGlobalAmount && (
                   <p
                     className="text-[10px] mt-0.5"
@@ -319,7 +357,6 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
                 )}
               </>
             ) : (
-              /* Pas de montant PA défini → afficher le global */
               funding.globalAmount != null && (
                 <div>
                   <p
@@ -348,24 +385,6 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
 
       {/* ── Corps ── */}
       <div className="px-4 py-3.5 space-y-3">
-        {/* Bailleurs groupés par type */}
-        {/* {hasAnyFunder && (
-          <div className="space-y-2.5">
-            {(
-              [
-                'funder',
-                'technical_partner',
-                'strategical_partner',
-              ] as FunderType[]
-            ).map((type) => (
-              <FunderGroup
-                key={type}
-                type={type}
-                funders={fundersByType[type]}
-              />
-            ))}
-          </div>
-        )} */}
         {/* Activités liées au financement */}
         {funding.activities?.length > 0 && (
           <div>
@@ -428,21 +447,6 @@ function FundingCard({ funding }: { funding: FundingDetail }) {
               </span>{' '}
               aire(s) protégée(s)
             </p>
-            {/* <div className="flex flex-wrap gap-1.5">
-              {funding.otherProtectedAreas.map((pa) => (
-                <span
-                  key={pa.id}
-                  className="px-2 py-0.5 rounded-full text-[11px] font-medium"
-                  style={{
-                    backgroundColor: colors.teal[50],
-                    border: `0.5px solid ${colors.teal[200]}`,
-                    color: colors.teal[800],
-                  }}
-                >
-                  {pa.sigle} – {pa.name}
-                </span>
-              ))}
-            </div> */}
           </div>
         )}
       </div>
@@ -488,20 +492,6 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
       </div>
     );
   }
-
-  // const allFunders = Array.from(
-  //   new Map(
-  //     data.fundings.flatMap((f) => f.funders).map((fu) => [fu.id, fu]),
-  //   ).values(),
-  // );
-
-  // const fundersByType = {
-  //   funder: allFunders.filter((f) => !f.type || f.type === 'funder'),
-  //   technical_partner: allFunders.filter((f) => f.type === 'technical_partner'),
-  //   strategical_partner: allFunders.filter(
-  //     (f) => f.type === 'strategical_partner',
-  //   ),
-  // };
 
   const totalPaEuro = data.fundings.reduce(
     (s, f) => s + (f.paAmountInEuro ?? f.globalAmountInEuro ?? 0),
@@ -568,38 +558,6 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
             <p className="text-sm" style={{ color: colors.teal[100] }}>
               {data.name}
             </p>
-
-            {/* Localisation */}
-            {(data.regions?.length ||
-              data.districts?.length ||
-              data.communes?.length) && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {data.regions?.map((r) => (
-                  <span
-                    key={r}
-                    className="text-[11px] px-2 py-0.5 rounded-full font-medium"
-                    style={{
-                      background: 'rgba(255,255,255,0.15)',
-                      color: colors.green[100],
-                    }}
-                  >
-                    {r}
-                  </span>
-                ))}
-                {data.districts?.map((d) => (
-                  <span
-                    key={d}
-                    className="text-[11px] px-2 py-0.5 rounded-full"
-                    style={{
-                      background: 'rgba(255,255,255,0.10)',
-                      color: 'rgba(255,255,255,0.75)',
-                    }}
-                  >
-                    {d}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Superficie */}
@@ -640,19 +598,6 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
                 value={String(data.fundings.length)}
                 variant="green"
               />
-              {/* <StatCard
-                label="Partenaires"
-                value={String(allFunders.length)}
-                sub={allFunders.map((f) => f.name).join(', ')}
-                variant="teal"
-              />
-              {totalPaEuro > 0 && (
-                <StatCard
-                  label="Budget total (€)"
-                  value={fmt(totalPaEuro, 'EUR')}
-                  variant="amber"
-                />
-              )} */}
               {data.populationCount != null && (
                 <StatCard
                   label="Population"
@@ -673,32 +618,32 @@ export function ProtectedAreaDetailPage({ areaId }: { areaId: string }) {
             </div>
           </div>
 
-          {/* Bailleurs globaux groupés
-          {allFunders.length > 0 && (
-            <div>
-              <p
-                className="text-[11px] uppercase tracking-widest font-medium mb-3"
-                style={{ color: colors.teal[600] }}
-              >
-                Bailleurs & Partenaires
-              </p>
-              <div className="space-y-2.5">
-                {(
-                  [
-                    'funder',
-                    'technical_partner',
-                    'strategical_partner',
-                  ] as FunderType[]
-                ).map((type) => (
-                  <FunderGroup
-                    key={type}
-                    type={type}
-                    funders={fundersByType[type]}
-                  />
-                ))}
-              </div>
+          {/* ── Localisation — toujours affichée ── */}
+          <div>
+            <p
+              className="text-[11px] uppercase tracking-widest font-medium mb-3"
+              style={{ color: colors.teal[600] }}
+            >
+              Localisation
+            </p>
+            <div className="space-y-2">
+              <LocalisationRow
+                label="Région"
+                values={data.regions ?? []}
+                color="#1e4976"
+              />
+              <LocalisationRow
+                label="Districts"
+                values={data.districts ?? []}
+                color="#0e7490"
+              />
+              <LocalisationRow
+                label="Communes"
+                values={data.communes ?? []}
+                color="#6d28d9"
+              />
             </div>
-          )} */}
+          </div>
 
           <div
             className="border-t"
