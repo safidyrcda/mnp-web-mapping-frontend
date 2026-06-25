@@ -66,6 +66,7 @@ export const saveProtectedAreaFundings = async (
   fundingId: string,
   entries: CreateProtectedAreaFundingDto[],
 ) => {
+  console.log('Saving entries:', JSON.stringify(entries, null, 2));
   const response = await fetch(
     `${BACKEND_URL}/fundings/${fundingId}/protected-area-fundings`,
     {
