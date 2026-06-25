@@ -111,7 +111,7 @@ function FunderPartnersCell({
             }}
           >
             <span>{p.label}</span>
-            <span
+            {/* <span
               style={{
                 fontSize: 9,
                 fontWeight: 700,
@@ -121,7 +121,7 @@ function FunderPartnersCell({
               }}
             >
               {s.label}
-            </span>
+            </span> */}
           </span>
         );
       })}
