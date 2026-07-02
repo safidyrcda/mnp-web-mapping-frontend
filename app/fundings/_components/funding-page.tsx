@@ -47,6 +47,7 @@ import {
 } from '@/app/api/fundings/get-fundings-by-ap.api';
 import { useRouter } from 'next/navigation';
 import { PartnershipForm } from './partnership-form';
+import { FunderSearchFilter } from './funder-search';
 
 export function FundingPage() {
   const router = useRouter();
@@ -58,6 +59,7 @@ export function FundingPage() {
 
   // ── Filtres ───────────────────────────────────────────────────────────────
   const [searchText, setSearchText] = useState('');
+  const [searchFunderText, setSearchFunderText] = useState('');
   const [filterProtectedArea, setFilterProtectedArea] = useState('');
   const [filterFunder, setFilterFunder] = useState('');
   const [filterCurrency, setFilterCurrency] = useState('');
@@ -179,6 +181,14 @@ export function FundingPage() {
           return false;
       }
 
+      if (searchFunderText.trim()) {
+        const q = searchFunderText.toLowerCase();
+
+        const matchFunder = (f.funder?.name ?? '').toLowerCase().includes(q);
+
+        if (!matchFunder) return false;
+      }
+
       // Aire protégée
       if (filterProtectedArea) {
         const has = f.protectedAreaFundings?.some(
@@ -217,6 +227,7 @@ export function FundingPage() {
     filterCurrency,
     filterYearStart,
     filterYearEnd,
+    searchFunderText,
   ]);
 
   const activeFiltersCount = [
@@ -462,6 +473,7 @@ export function FundingPage() {
         {filtersOpen && (
           <div style={{ padding: '16px 20px' }}>
             {/* Ligne 1 : Recherche plein texte */}
+
             <div style={{ marginBottom: 14 }}>
               <label
                 style={{
@@ -554,17 +566,75 @@ export function FundingPage() {
               />
 
               {/* Bailleur */}
-              <FilterSelect
-                label="Bailleur / Partenaire"
-                value={filterFunder}
-                onChange={setFilterFunder}
-                placeholder="Tous"
-                options={funders.map((f) => ({
-                  value: f.id ?? '',
-                  label: f.name,
-                }))}
-                active={!!filterFunder}
-              />
+              <div style={{ marginBottom: 14 }}>
+                <label
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: '#64748b',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    display: 'block',
+                    marginBottom: 6,
+                  }}
+                >
+                  Recherche de bailleur
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Search
+                    size={14}
+                    color="#94a3b8"
+                    style={{
+                      position: 'absolute',
+                      left: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={searchFunderText}
+                    onChange={(e) => setSearchFunderText(e.target.value)}
+                    placeholder="Nom de bailleurs"
+                    style={{
+                      width: '100%',
+                      paddingLeft: 32,
+                      paddingRight: searchFunderText ? 32 : 12,
+                      paddingTop: 8,
+                      paddingBottom: 8,
+                      border: '1.5px solid',
+                      borderColor: searchFunderText ? '#1e4976' : '#e2e8f0',
+                      borderRadius: 8,
+                      fontSize: 13,
+                      color: '#0f172a',
+                      background: searchFunderText ? '#f0f6ff' : '#f8fafc',
+                      outline: 'none',
+                      transition: 'all 0.15s',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  {searchFunderText && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchFunderText('')}
+                      style={{
+                        position: 'absolute',
+                        right: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#94a3b8',
+                        display: 'flex',
+                        padding: 2,
+                      }}
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
 
               {/* Devise */}
               <FilterSelect

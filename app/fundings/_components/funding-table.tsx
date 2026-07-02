@@ -1,12 +1,8 @@
 'use client';
 
-import { Funding, Project, ProtectedArea } from '@/lib/schemas';
-import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, DollarSign } from 'lucide-react';
-import {
-  GetFundingsDTO,
-  ProtectedAreaPartnerEntry,
-} from '@/app/api/manage-data';
+import { Project, ProtectedArea } from '@/lib/schemas';
+
+import { GetFundingsDTO } from '@/app/api/manage-data';
 
 const PARTNER_TYPE_STYLES: Record<
   string,
