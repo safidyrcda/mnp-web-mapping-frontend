@@ -578,7 +578,7 @@ export function FundingPage() {
                     marginBottom: 6,
                   }}
                 >
-                  Recherche de bailleur
+                  Recherche de bailleur / partenaire
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Search
@@ -595,7 +595,7 @@ export function FundingPage() {
                     type="text"
                     value={searchFunderText}
                     onChange={(e) => setSearchFunderText(e.target.value)}
-                    placeholder="Nom de bailleurs"
+                    placeholder="Nom de bailleurs / Partenaire"
                     style={{
                       width: '100%',
                       paddingLeft: 32,
